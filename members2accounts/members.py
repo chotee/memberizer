@@ -1,4 +1,4 @@
 
 class Members(object):
-    def check_validity(self):
+    def verify_validity(self):
         pass

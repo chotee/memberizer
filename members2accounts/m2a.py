@@ -15,7 +15,7 @@ class Members2Accounts():
     def go(self, accounts, members):
         accounts.verify_connection() # Preflight test.
 
-        members.check_validity() # Check that the document is trustable.
+        members.verify_validity() # Check that the document is trustable.
 
         report = ChangeReporter() # Object that receives the changes for reporting it.
         accounts.publish_changes_to(report)
