@@ -13,7 +13,10 @@ class AccountDoesNotExistException(RuntimeError):
 
 class Members2Accounts():
     def add_or_update_accounts(self, accounts, members):
-        '''I create accounts for members and return a list with any accounts that are no longer members.'''
+        """I create accounts for members. I return a list with any accounts that are no longer members.
+        :param accounts: Access to the accounts (this is what we will be modifying)
+        :param members: List of all the current members.
+        """
         pending_members = set(accounts.get_all_members()) # Get all the accounts that are already member.
         for member in members: # Loop over the members
             try:
@@ -27,7 +30,19 @@ class Members2Accounts():
                 member) # remove it from the pending set since we saw this account in the list of members.
         return pending_members # this is a list of accounts that used to be members, but are not now.
 
+    def make_accounts_non_members(self, accounts, accounts_not_current_members):
+        """I make all of the accounts_not_current_members non members in the accounts object.
+        :param accounts: Access to the accounts
+        :param accounts_not_current_members: List of accounts that should nolonger be members.
+        """
+        for member in accounts_not_current_members: # All the accounts that were not in the member list.
+            accounts.revoke_membership(member) # Remove their membership attributes.
+
     def go(self, accounts, members):
+        """I Run the main update routine.
+        :param accounts: Access to the accounts (this is what we will be modifying)
+        :param members: List of all the current members.
+        """
         accounts.verify_connection() # Preflight test.
 
         members.verify_validity() # Check that the document is trustable.
@@ -37,8 +52,7 @@ class Members2Accounts():
 
         accounts_not_current_members = self.add_or_update_accounts(accounts, members)
 
-        for member in accounts_not_current_members: # All the accounts that were not in the member list.
-            accounts.revoke_membership(member) # Remove their membership attributes.
+        self.make_accounts_non_members(accounts, accounts_not_current_members)
 
         PublishReport(report.generate_overview()) # Lets publish a report with the changes.
 
