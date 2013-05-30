@@ -1,4 +1,4 @@
-from ldapom import LdapConnection
+#from ldapom import LdapConnection
 
 from config import Config
 
@@ -29,4 +29,8 @@ class Accounts(object):
         pass
 
     def revoke_membership(self, member):
+        pass
+
+class Account(object):
+    def is_member(self):
         pass
