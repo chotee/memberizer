@@ -1,0 +1,17 @@
+[
+    {
+        "nickname": "existing",
+        "email": "existing@techinc.nl",
+        "paid_until": "2014-05-23"
+    },
+    {
+        "nickname": "new",
+        "email": "new@techinc.nl",
+        "paid_until": "2014-07-01"
+    },
+    {
+        "nickname": "late",
+        "email": "late@techinc.nl",
+        "paid_until": "2013-04-01"
+    }
+]
