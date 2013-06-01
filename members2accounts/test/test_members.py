@@ -10,6 +10,10 @@ from members2accounts.config import Config
 def test_json(request):
     Config()['members.json'] = unicode(py.path.local(__file__).join('../test_members.json').realpath())
 
+@pytest.fixture
+def test_json_broken(request):
+    Config()['members.json'] = unicode(py.path.local(__file__).join('../test_members_broken.json').realpath())
+
 class TestMembers(object):
     def test_init(self):
         Members()
@@ -22,3 +26,6 @@ class TestMembers(object):
     def test_load_member_data_missing_file(self):
         Config()['members.json'] = 'doesnotexist.'
         pytest.raises(IOError, Members().load_member_data)
+
+    def test_load_member_data_broken_json(self, test_json_broken):
+        pytest.raises(ValueError, Members().load_member_data)
