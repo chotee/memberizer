@@ -6,20 +6,24 @@ import pytest
 from members2accounts.members import Members, Member
 from members2accounts.config import Config
 
+def fixture_file(name):
+    """I return a string with the absolute path to a fixture file"""
+    return unicode(py.path.local(__file__).join('..').join(name).realpath())
+
 @pytest.fixture
 def test_json(request):
-    Config()['members.json'] = unicode(py.path.local(__file__).join('../test_members.json').realpath())
+    Config()['members.json'] = fixture_file('test_members.json')
 
 @pytest.fixture
 def test_json_broken(request):
-    Config()['members.json'] = unicode(py.path.local(__file__).join('../test_members_broken.json').realpath())
+    Config()['members.json'] = fixture_file('test_members_broken.json')
 
 class TestMembers(object):
     def test_init(self):
         Members()
 
     def test_load_member_data(self, test_json):
-        assert Config()['members.json'] == py.path.local(__file__).join('../test_members.json').realpath()
+        assert Config()['members.json'] == fixture_file('test_members.json')
         m = Members()
         assert 3 == len(m.load_member_data())
 
