@@ -17,6 +17,8 @@ class Members(object):
         json_stream = open(Config()['members.json'])
         return json.load(json_stream)
 
-class Member(object):
-    def __init__(self, email=None):
-        self.email = email
+class Member(dict):
+    def __getattr__(self, item):
+        if item not in self:
+            raise AttributeError(item)
+        return self[item]

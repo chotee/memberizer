@@ -3,7 +3,7 @@ __author__ = 'chotee'
 import py
 import pytest
 
-from members2accounts.members import Members
+from members2accounts.members import Members, Member
 from members2accounts.config import Config
 
 @pytest.fixture
@@ -29,3 +29,17 @@ class TestMembers(object):
 
     def test_load_member_data_broken_json(self, test_json_broken):
         pytest.raises(ValueError, Members().load_member_data)
+
+class TestMember(object):
+    def test_init(self):
+        data = {'email': 'test@somedomain.com',
+                'nickname': 'testtest',
+                'paid_until': '2012-03-12'}
+        m = Member(data)
+        assert m.email == 'test@somedomain.com'
+        try:
+            m.doesnotexist
+        except AttributeError:
+            pass
+        else:
+            assert False, "Should have thrown"
