@@ -41,7 +41,7 @@ class Mock_Account():
         pass
 
 class Mock_Members():
-    def verify_validity(self): pass
+    def decrypt_and_verify(self): pass
     def list_members(self):
         return [
             Mock_Member(email="exists@member.nl"),

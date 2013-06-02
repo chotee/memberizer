@@ -11,7 +11,7 @@ class _Config(dict):
             # GPG elements.
             'gpg_keyring': None, # directory with the GPG keyring. None will give the default location for the user.
             'gpg_my_id': '7C7F 7435 140C E92E BB33  6CF7 8367 1848 9BB7 D7C7', # Fingerprint of the key that the automation uses to decrypt and sign
-            'gpg_trusted_ids' : [
+            'gpg_allowed_ids' : [
                 '8044 9D3E 6EAC E4D9 C4D2  A5D7 6752 C3BC 94DA 7C30',
             ], # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
 

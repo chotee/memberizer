@@ -1,3 +1,4 @@
+import sys
 import logging
 
 logging.basicConfig()
@@ -45,7 +46,7 @@ class Members2Accounts():
         """
         accounts.verify_connection() # Preflight test.
 
-        members.verify_validity() # Check that the document is trustable.
+        members.decrypt_and_verify() # Check that the document is trustable.
 
         report = ChangeReporter() # Object that receives the changes for reporting it.
         accounts.publish_changes_to(report)
@@ -57,4 +58,5 @@ class Members2Accounts():
         PublishReport(report.generate_overview()) # Lets publish a report with the changes.
 
 if __name__ == "__main__":
-    Members2Accounts.go(Accounts(), Members())
+    member_file = sys.argv[1]
+    Members2Accounts.go(Accounts(), Members(member_file))
