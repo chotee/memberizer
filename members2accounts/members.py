@@ -9,14 +9,17 @@ class Members(object):
     """I represent all current members"""
     def __init__(self, member_filename=None):
         self.member_filename = member_filename
-        if member_filename is not None:
-            self.member_fd = open(self.member_filename, 'rb')
+        self.member_fd = open(self.member_filename, 'rb') if member_filename is not None else None
         self.json_data = None
         self.member_data = None
 
-    def decrypt_and_verify(self):
+    def decrypt_and_verify(self, keyring=None):
         """I use GPG to decrypt the file and verify that it is to be trusted."""
-        gpg = gnupg.GPG(Config['gpg_keyring'])
+        if keyring is None:
+            keyring = Config['gpg_keyring']
+        gpg = gnupg.GPG(gnupghome=keyring)
+
+        assert self.member_fd is not None
         dec_data = gpg.decrypt_file(self.member_fd)
         if not dec_data.ok:
             raise DecryptionFailedException("filename: %s" % self.member_filename)
@@ -27,13 +30,12 @@ class Members(object):
                                                                                                 dec_data.pubkey_fingerprint[-8:]))
         ### Okay, it's a validly signed file. Now lets see if this signer is allowed to update member data.
         if not self._is_allowed(dec_data):
-            raise SignerIsNotAllowedException("Key %s [%s] is trusted, but not allowed to update member data" % (dec_data.username, pubkey_fingerprint[-8:]))
-
+            raise SignerIsNotAllowedException("Key %s [%s] is trusted, but not allowed to update member data" % (dec_data.username, dec_data.pubkey_fingerprint[-8:]))
         return True
 
     def _is_allowed(self, dec_data):
         for fpr in Config()['gpg_allowed_ids']:
-            canonical_fpr = key.replace(' ', '')
+            canonical_fpr = fpr.replace(' ', '')
             if canonical_fpr == dec_data.pubkey_fingerprint:
                 return True
         return False
