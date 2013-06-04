@@ -7,6 +7,7 @@ log.setLevel(logging.DEBUG)
 
 from accounts import Accounts
 from members import  Members
+from exc import CryptoException
 from reporting import ChangeReporter, PublishReport
 
 class AccountDoesNotExistException(RuntimeError):
@@ -44,9 +45,9 @@ class Members2Accounts():
         :param accounts: Access to the accounts (this is what we will be modifying)
         :param members: List of all the current members.
         """
-        accounts.verify_connection() # Preflight test.
+        accounts.verify_connection() # Pre-flight test of member database
 
-        members.decrypt_and_verify() # Check that the document is trustable.
+        members.decrypt_and_verify() # Check that the member change document is trustable.
 
         report = ChangeReporter() # Object that receives the changes for reporting it.
         accounts.publish_changes_to(report)
