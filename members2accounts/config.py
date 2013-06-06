@@ -1,12 +1,16 @@
 _CONFIG_INST = None
-def Config():
+def Config(custom_values=None):
     global _CONFIG_INST
     if _CONFIG_INST is None:
-        _CONFIG_INST = _Config()
+        _CONFIG_INST = _Config(custom_values)
     return _CONFIG_INST
 
+def Config_reset():
+    global  _CONFIG_INST
+    _CONFIG_INST = None
+
 class _Config(dict):
-    def __init__(self):
+    def __init__(self, custom_values=None):
         self.update({
             # GPG elements.
             'gpg_keyring': None, # directory with the GPG keyring. None will give the default location for the user.
@@ -24,5 +28,8 @@ class _Config(dict):
             'people_dn': 'ou=people,dc=techinc,dc=nl', #
             'groups_dn': 'ou=groups,dc=techinc,dc=nl',
             'member_group': 'members',
+            'home_base': '/home/' # base for the home directory. Will append the nickname to this.
                                              # These keys also have to be added to the keyring.
         })
+        if custom_values:
+            self.update(custom_values)

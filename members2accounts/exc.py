@@ -19,3 +19,7 @@ class KeyNotTrustedException(CryptoException):
 class SignerIsNotAllowedException(CryptoException):
     """I get raised when the signed is not one of the allowed changers of the code."""
     pass
+
+
+class AccountDoesNotExistException(RuntimeError):
+    pass

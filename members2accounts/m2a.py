@@ -7,11 +7,9 @@ log.setLevel(logging.DEBUG)
 
 from accounts import Accounts
 from members import  Members
-from exc import CryptoException
+from exc import CryptoException, AccountDoesNotExistException
 from reporting import ChangeReporter, PublishReport
 
-class AccountDoesNotExistException(RuntimeError):
-    pass
 
 class Members2Accounts():
     def add_or_update_accounts(self, accounts, members):

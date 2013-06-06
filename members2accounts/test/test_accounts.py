@@ -1,11 +1,13 @@
 __author__ = 'chotee'
 
 import pytest
+from datetime import date
 
 from members2accounts.accounts import Accounts
 
 import ldap
 from fakeldap import MockLDAP
+from mocks import Mock_Member
 
 @pytest.fixture
 def fake_accounts(monkeypatch):
@@ -14,7 +16,7 @@ def fake_accounts(monkeypatch):
     a = Accounts()
     a._conn.set_return_value('search_s',
                              #(base, scope, filterstr, attrlist, attrsonly),
-                             ('ou=people,dc=techinc,dc=nl', ldap.SCOPE_SUBTREE, '(objectClass=*)', None, 0),
+                             ('ou=people,dc=techinc,dc=nl', ldap.SCOPE_BASE , '(objectClass=*)', None, 0),
                              [('ou=people,dc=techinc,dc=nl',
                               {'objectClass': ['organizationalUnit', 'top'], 'ou': ['people']})]
     )
@@ -25,3 +27,8 @@ class TestAccounts():
         a = fake_accounts
         a.verify_connection()
 #    def test_create_user(self):
+
+    def test_create(self, fake_accounts):
+        a = fake_accounts
+        member = Mock_Member(nickname="testcreate", email="test@techinc.nl", paid_until=date(2013, 8, 12))
+        a.create(member)

@@ -18,7 +18,7 @@ class Accounts(object):
         self._listeners = []
 
     def verify_connection(self):
-        self._conn.search_s(self._c['people_dn'],ldap.SCOPE_SUBTREE)
+        self._conn.search_s(self._c['people_dn'],ldap.SCOPE_BASE)
 
     def publish_changes_to(self, report):
         self._listeners.append(report)
@@ -33,7 +33,27 @@ class Accounts(object):
         pass
 
     def create(self, member):
-        pass
+        (uid, gid) = self._grab_unique_ids()
+        nickname = member.nickname
+        member_dn = 'cn=%s,%s' % (nickname, self._c['people_dn'])
+        home_directory = ''.join([self._c['home_base'], nickname])
+        member_record = [
+            ('object_class', ['inetOrgPerson', 'posixAccount', 'top']),
+            ('cn', [nickname]),
+            ('sn', [nickname]),
+            ('uid', [nickname]),
+            ('uidNumber', [str(uid)]),
+            ('gidNumber', [str(gid)]),
+            ('homeDirectory', [home_directory]),
+            ('mail', [member.email]),
+            ('telexNumber', [str(member.paid_until)]) # Abuse, I know.
+            # Don't complain. If you write a proper Schema and IOU a beer!
+        ]
+        self._conn.add_s(member_dn, member_record)
+        return member_dn
+
+    def _grab_unique_ids(self):
+        return '20000', '20001'
 
     def revoke_membership(self, member):
         pass
