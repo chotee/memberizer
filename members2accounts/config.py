@@ -27,6 +27,7 @@ class _Config(dict):
             'base_dn': 'dc=techinc,dc=nl',
             'people_dn': 'ou=people,dc=techinc,dc=nl', #
             'groups_dn': 'ou=groups,dc=techinc,dc=nl',
+            'free_id_dn': 'cn=NextFreeUnixId,dc=techinc,dc=nl',
             'member_group': 'members',
             'home_base': '/home/' # base for the home directory. Will append the nickname to this.
                                              # These keys also have to be added to the keyring.

@@ -53,7 +53,16 @@ class Accounts(object):
         return member_dn
 
     def _grab_unique_ids(self):
-        return '20000', '20001'
+        # TODO: Remove race conditions!
+        res = self._conn.search_s(self._c['free_id_dn'], ldap.SCOPE_BASE)
+        uid = res[0][1]['uidNumber'][0]
+        gid = res[0][1]['gidNumber'][0]
+        update_res = [
+            (ldap.MOD_REPLACE, 'uidNumber', str(int(uid)+1)),
+            (ldap.MOD_REPLACE, 'gidNumber', str(int(gid)+1)),
+        ]
+        self._conn.modify_s(self._c['free_id_dn'], update_res)
+        return uid, gid
 
     def revoke_membership(self, member):
         pass

@@ -15,10 +15,25 @@ def fake_accounts(monkeypatch):
     monkeypatch.setattr(ldap, 'initialize', mock_ldap)
     a = Accounts()
     a._conn.set_return_value('search_s',
-                             #(base, scope, filterstr, attrlist, attrsonly),
-                             ('ou=people,dc=techinc,dc=nl', ldap.SCOPE_BASE , '(objectClass=*)', None, 0),
-                             [('ou=people,dc=techinc,dc=nl',
-                              {'objectClass': ['organizationalUnit', 'top'], 'ou': ['people']})]
+        #(base, scope, filterstr, attrlist, attrsonly),
+        ('ou=people,dc=techinc,dc=nl', ldap.SCOPE_BASE , '(objectClass=*)', None, 0),
+            [
+                ('ou=people,dc=techinc,dc=nl',
+                {'objectClass': ['organizationalUnit', 'top'],
+                 'ou': ['people']})
+            ]
+    )
+    a._conn.set_return_value('search_s',
+        ('cn=NextFreeUnixId,dc=techinc,dc=nl', ldap.SCOPE_BASE, '(objectClass=*)', None, 0),
+        [
+            ('cn=NextFreeUnixId,dc=techinc,dc=nl',
+             {'cn': ['NextFreeUnixId'],
+              'gidNumber': ['777'],
+              'objectClass': ['inetOrgPerson', 'sambaUnixIdPool'],
+              'sn': ['NextFreeUnixId'],
+              'uidNumber': ['666']}
+            )
+        ]
     )
     return a
 
