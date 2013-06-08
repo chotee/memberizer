@@ -5,10 +5,10 @@ logging.basicConfig()
 log = logging.getLogger(__file__)
 log.setLevel(logging.DEBUG)
 
-from accounts import Accounts
-from members import  Members
-from exc import CryptoException, AccountDoesNotExistException
-from reporting import ChangeReporter, PublishReport
+from members2accounts.accounts import Accounts, Account
+from members2accounts.members import  Members
+from members2accounts.exc import CryptoException, AccountDoesNotExistException
+from members2accounts.reporting import ChangeReporter, PublishReport
 
 
 class Members2Accounts():
@@ -18,16 +18,17 @@ class Members2Accounts():
         :param members: List of all the current members.
         """
         pending_members = set(accounts.get_all_member_emails()) # Get all the accounts that are already member.
-        for member in members.list_members(): # Loop over the members
-            try:
-                account = accounts.fetch(member.email) # lets get the member
-                pending_members.remove(member.email) # remove it from the pending set since we saw this account
-                                                     # in the list of members.
-            except AccountDoesNotExistException:
-                account = accounts.create(member) # The member doesn't exist. Create it!
-            accounts.update(member) # Update the data of the member.
-            if not account.is_member(): # Is the account not yet a member?
-                account.make_member() # Lets make it one!
+        # for member in members.list_members(): # Loop over the members
+        #     account = Accounts().new_account()
+        #     try:
+        #         account = accounts.fetch(member.email) # lets get the member
+        #         pending_members.remove(member.email) # remove it from the pending set since we saw this account
+        #                                              # in the list of members.
+        #     except AccountDoesNotExistException:
+        #         account = accounts.create(member) # The member doesn't exist. Create it!
+        #     account.update(member) # Update the data of the member.
+        #     if not account.is_member(): # Is the account not yet a member?
+        #         account.make_member() # Lets make it one!
         return pending_members # this is a list of accounts that used to be members, but are not now.
 
     def make_accounts_non_members(self, accounts, accounts_not_current_members):

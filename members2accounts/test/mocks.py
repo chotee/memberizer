@@ -12,9 +12,10 @@ class Mock_Accounts():
         if member == 'new@member.nl':
             raise AccountDoesNotExistException()
         return Mock_Account(member)
-    def update(self, member): pass
     def create(self, member):
         return Mock_Account(member)
+    def revoke_membership(self, member):
+        pass
 
 class Mock_Account():
     def __init__(self, email):
@@ -25,12 +26,14 @@ class Mock_Account():
         return False
     def make_member(self):
         pass
+    def update(self, member):
+        pass
 
 class Mock_Members():
     def decrypt_and_verify(self): pass
     def list_members(self):
         return [
-            Mock_Member("exists","exists@member.nl", date(2012,01,15)),
+            Mock_Member("exists","exists@member.nl", date(2012,1,15)),
             Mock_Member("new","new@member.nl", date(2013,6,4)),
         ]
 
