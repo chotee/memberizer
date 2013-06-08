@@ -23,3 +23,6 @@ class SignerIsNotAllowedException(CryptoException):
 
 class AccountDoesNotExistException(RuntimeError):
     pass
+
+class MultipleResultsException(RuntimeError):
+    pass

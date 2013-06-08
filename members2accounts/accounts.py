@@ -1,11 +1,14 @@
-#from ldapom import LdapConnection
 import ldap
+from ldap.filter import filter_format
+
+import datetime
 
 import logging
 logging.basicConfig()
 log = logging.getLogger(__file__)
 
-from config import Config
+from members2accounts.config import Config
+from members2accounts.exc import AccountDoesNotExistException, MultipleResultsException
 
 class Accounts(object):
     def __init__(self):
@@ -17,6 +20,9 @@ class Accounts(object):
         log.info("Connected to %s %s as %s", self._c['server_uri'], self._c['base_dn'], self._c['admin_user'])
         self._listeners = []
 
+    def _account_dn(self, nickname):
+        return filter_format('cn=%s,%s', [nickname, self._c['people_dn']])
+
     def verify_connection(self):
         self._conn.search_s(self._c['people_dn'],ldap.SCOPE_BASE)
 
@@ -26,8 +32,15 @@ class Accounts(object):
     def get_all_members(self):
         pass
 
-    def fetch(self, member):
-        pass
+    def fetch(self, member_email):
+        filter = filter_format('(&(mail=%s)(objectClass=inetOrgPerson))', [member_email])
+        res = self._conn.search_s(self._c['people_dn'], ldap.SCOPE_ONELEVEL, filter)
+        if len(res) == 0:
+            raise AccountDoesNotExistException(member_email)
+        if len(res) > 1:
+            raise MultipleResultsException(member_email)
+
+        return Account(self._conn, res[0])
 
     def update(self, member):
         pass
@@ -35,7 +48,7 @@ class Accounts(object):
     def create(self, member):
         (uid, gid) = self._grab_unique_ids()
         nickname = member.nickname
-        member_dn = 'cn=%s,%s' % (nickname, self._c['people_dn'])
+        member_dn = self._account_dn(nickname)
         home_directory = ''.join([self._c['home_base'], nickname])
         member_record = [
             ('object_class', ['inetOrgPerson', 'posixAccount', 'top']),
@@ -68,5 +81,30 @@ class Accounts(object):
         pass
 
 class Account(object):
+    def __init__(self, conn, account_info):
+        self._conn = conn
+        self._dn = account_info[0]
+        self._attributes = {}
+        for k,v in account_info[1].iteritems():
+            self._attributes[k] = v if len(v) > 1 else v[0]
+
+    @property
+    def email(self):
+        return self.mail
+
+    @property
+    def nickname(self):
+        return self.cn
+
+    @property
+    def paid_until(self):
+        return datetime.datetime.strptime(self.telexNumber, "%Y-%m-%d").date()
+
     def is_member(self):
         pass
+
+    def __getattr__(self, item):
+        if item in self._attributes:
+            return self._attributes[item]
+        raise AttributeError(item)
+
