@@ -11,11 +11,13 @@ from members2accounts.config import Config
 from members2accounts.exc import AccountDoesNotExistException, MultipleResultsException
 
 class Accounts(object):
-    def __init__(self):
+    def __init__(self, ldap_conn=None):
         log.debug("Connecting")
         self._c = Config()
-        #self._conn = LdapConnection(uri=self._c['server_uri'], base=self._c['base_dn'], login=self._c['admin_user'], password=self._c['admin_pass'])
-        self._conn = ldap.initialize(self._c['server_uri'])
+        if ldap_conn:
+            self._conn = ldap_conn
+        else:
+            self._conn = ldap.initialize(self._c['server_uri'])
         self._conn.simple_bind_s(self._c['admin_user'], self._c['admin_pass'])
         log.info("Connected to %s %s as %s", self._c['server_uri'], self._c['base_dn'], self._c['admin_user'])
         self._listeners = []

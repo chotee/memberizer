@@ -13,9 +13,8 @@ from members2accounts.exc import *
 
 @pytest.fixture
 def fake_accounts(monkeypatch):
-    mock_ldap = MockLDAP
-    monkeypatch.setattr(ldap, 'initialize', mock_ldap)
-    a = Accounts()
+    mock_ldap_conn = MockLDAP()
+    a = Accounts(mock_ldap_conn)
     a._conn.set_return_value('search_s',
         #(base, scope, filterstr, attrlist, attrsonly),
         ('ou=people,dc=techinc,dc=nl', ldap.SCOPE_BASE , '(objectClass=*)', None, 0),

@@ -17,18 +17,15 @@ class Members2Accounts():
         :param accounts: Access to the accounts (this is what we will be modifying)
         :param members: List of all the current members.
         """
-        pending_members = set(accounts.get_all_member_emails()) # Get all the accounts that are already member.
-        # for member in members.list_members(): # Loop over the members
-        #     account = Accounts().new_account()
-        #     try:
-        #         account = accounts.fetch(member.email) # lets get the member
-        #         pending_members.remove(member.email) # remove it from the pending set since we saw this account
-        #                                              # in the list of members.
-        #     except AccountDoesNotExistException:
-        #         account = accounts.create(member) # The member doesn't exist. Create it!
-        #     account.update(member) # Update the data of the member.
-        #     if not account.is_member(): # Is the account not yet a member?
-        #         account.make_member() # Lets make it one!
+        pending_members =  set([a.nickname for a in accounts.get_all_member_accounts()]) # Get the nicknames of accounts that are already member.
+        for member in members.list_members(): # Loop over the members
+            account = accounts.new_account()
+            account.load_account_from_member(member)
+            account.save()
+            if not account.is_member():
+                account.make_member()
+            if member.nickname in pending_members:
+                pending_members.remove(member.nickname)
         return pending_members # this is a list of accounts that used to be members, but are not now.
 
     def make_accounts_non_members(self, accounts, accounts_not_current_members):

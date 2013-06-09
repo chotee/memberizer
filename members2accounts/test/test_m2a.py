@@ -1,7 +1,7 @@
 __author__ = 'chotee'
 
 from members2accounts.m2a import Members2Accounts
-from mocks import *
+from members2accounts.test.mocks import *
 
 #from members2accounts.members import Member
 #from members2accounts.accounts import Account

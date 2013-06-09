@@ -7,26 +7,34 @@ from members2accounts.exc import AccountDoesNotExistException
 class Mock_Accounts():
     def verify_connection(self): pass
     def publish_changes_to(self, report): pass
-    def get_all_member_emails(self): return ["exists@member.nl",]
-    def fetch(self, member):
-        if member == 'new@member.nl':
-            raise AccountDoesNotExistException()
-        return Mock_Account(member)
-    def create(self, member):
-        return Mock_Account(member)
-    def revoke_membership(self, member):
-        pass
+    def get_all_member_accounts(self): return [Mock_Account("exists@member.nl"),]
+    def new_account(self):
+        return Mock_Account()
+    # def fetch(self, member):
+    #     if member == 'new@member.nl':
+    #         raise AccountDoesNotExistException()
+    #     return Mock_Account(member)
+    # def create(self, member):
+    #     return Mock_Account(member)
+    # def revoke_membership(self, member):
+    #     pass
 
 class Mock_Account():
-    def __init__(self, email):
-        self._email = email
+    def __init__(self, email=None):
+        if email:
+            self.email = email
+            self.nickname = email[:email.index('@')]
+    def load_account_from_member(self, member):
+        self.email = member.email
+        self.nickname = member.nickname
+        self.paid_until = member.paid_until
     def is_member(self):
-        if self._email == "exists@member.nl":
+        if self.email == "exists@member.nl":
             return True
         return False
     def make_member(self):
         pass
-    def update(self, member):
+    def save(self):
         pass
 
 class Mock_Members():
