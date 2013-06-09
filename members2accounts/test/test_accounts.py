@@ -73,13 +73,6 @@ class TestAccount(object):
         assert a.email == 'existing@techinc.nl'
         assert a.paid_until == date(2013, 12, 1)
 
-
-class TestAccounts(object):
-    def test_verify_connection(self, fake_accounts):
-        a = fake_accounts
-        a.verify_connection()
-#    def test_create_user(self):
-
     def test_create(self, fake_accounts):
         accounts = fake_accounts
         member = Mock_Member(nickname="testcreate", email="test@techinc.nl", paid_until=date(2013, 8, 12))
@@ -94,19 +87,27 @@ class TestAccounts(object):
         assert account.in_ldap == True
         assert not account.is_dirty
 
-    def test_fetch(self, fake_accounts):
-        a = fake_accounts
-        pytest.raises(AccountDoesNotExistException, a.fetch, "doesnotexist@techinc.nl")
-
-        account = a.fetch("existing@techinc.nl")
-        assert account.email == "existing@techinc.nl"
-        assert account.nickname == 'existing'
-        assert account.paid_until == date(2013, 12, 1)
-
-    @pytest.mark.xfail
     def test_update(self, fake_accounts):
         accounts = fake_accounts
+        account = accounts.new_account()
         member_original = Mock_Member(nickname="testcreate", email="test@techinc.nl", paid_until=date(2013, 8, 12))
-        account = accounts.create(member_original)
+        account.load_account_from_member(member_original)
+        account.save()
         member_updated = Mock_Member(nickname="testcreate", email="test@techinc.nl", paid_until=date(2013, 10, 30))
-        account.update(member_updated)
+        account.load_account_from_member(member_updated)
+        account.save()
+
+class TestAccounts(object):
+    def test_verify_connection(self, fake_accounts):
+        a = fake_accounts
+        a.verify_connection()
+#    def test_create_user(self):
+
+    # def test_fetch(self, fake_accounts):
+    #     a = fake_accounts
+    #     pytest.raises(AccountDoesNotExistException, a.fetch, "doesnotexist@techinc.nl")
+    #
+    #     account = a.fetch("existing@techinc.nl")
+    #     assert account.email == "existing@techinc.nl"
+    #     assert account.nickname == 'existing'
+    #     assert account.paid_until == date(2013, 12, 1)

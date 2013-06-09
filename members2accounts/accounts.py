@@ -31,35 +31,35 @@ class Accounts(object):
     def new_account(self):
         return Account(self._conn)
 
-    def get_all_members(self):
+    def get_all_member_accounts(self):
         pass
 
-    def fetch(self, member_email):
+    # def fetch(self, member_email):
         # account = Account(self._conn)
         # acount.load_from_ldap_by_email()
         # return account
-        filter = filter_format('(&(mail=%s)(objectClass=inetOrgPerson))', [member_email])
-        res = self._conn.search_s(self._c['people_dn'], ldap.SCOPE_ONELEVEL, filter)
-        if len(res) == 0:
-            raise AccountDoesNotExistException(member_email)
-        if len(res) > 1:
-            raise MultipleResultsException(member_email)
-        # return Account(self._conn, res[0])
-        account = Account(self._conn)
-        account.load_from_ldap_account_info(res[0])
-        return account
+        # filter = filter_format('(&(mail=%s)(objectClass=inetOrgPerson))', [member_email])
+        # res = self._conn.search_s(self._c['people_dn'], ldap.SCOPE_ONELEVEL, filter)
+        # if len(res) == 0:
+        #     raise AccountDoesNotExistException(member_email)
+        # if len(res) > 1:
+        #     raise MultipleResultsException(member_email)
+        # # return Account(self._conn, res[0])
+        # account = Account(self._conn)
+        # account.load_from_ldap_account_info(res[0])
+        # return account
 
-    def update(self, member):
-        pass
+    # def update(self, member):
+    #     pass
 
-    def create(self, member):
-        account = Account(self._conn)
-        account.load_account_from_member(member)
-        account.save()
-        return account
+    # def create(self, member):
+    #     account = Account(self._conn)
+    #     account.load_account_from_member(member)
+    #     account.save()
+    #     return account
 
-    def revoke_membership(self, member):
-        pass
+    # def revoke_membership(self, member):
+    #     pass
 
 class Account(object):
     def __init__(self, conn):
@@ -142,6 +142,9 @@ class Account(object):
         member_record.append(('object_class', ['inetOrgPerson', 'posixAccount', 'top']))
         self._conn.add_s(self._ldap_dn, member_record)
         self._dirty = []
+
+    def update(self):
+        pass
 
     @property
     def in_ldap(self):
