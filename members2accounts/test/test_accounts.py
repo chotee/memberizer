@@ -91,11 +91,37 @@ class TestAccount(object):
         accounts = fake_accounts
         account = accounts.new_account()
         member_original = Mock_Member(nickname="testcreate", email="test@techinc.nl", paid_until=date(2013, 8, 12))
+        assert account.is_dirty == False
         account.load_account_from_member(member_original)
+        assert account.is_dirty == True
         account.save()
+        assert account.is_dirty == False
         member_updated = Mock_Member(nickname="testcreate", email="test@techinc.nl", paid_until=date(2013, 10, 30))
         account.load_account_from_member(member_updated)
+        assert account.is_dirty == True
         account.save()
+        assert account.is_dirty == False
+
+    def test_getter_and_setters(self, fake_accounts):
+        accs = fake_accounts
+        a = accs.new_account()
+        assert None == a.nickname
+        assert a.is_dirty == False
+        a.nickname = "testnick"
+        assert "testnick" == a.nickname
+        assert a.is_dirty == True
+        a = accs.new_account()
+        assert None == a.email
+        assert a.is_dirty == False
+        a.email = "testnick@techinc.nl"
+        assert "testnick@techinc.nl" == a.email
+        assert a.is_dirty == True
+        a = accs.new_account()
+        assert None == a.paid_until
+        assert a.is_dirty == False
+        a.paid_until = date(2013, 8, 20)
+        assert a.is_dirty == True
+
 
 class TestAccounts(object):
     def test_verify_connection(self, fake_accounts):

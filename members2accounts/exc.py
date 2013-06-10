@@ -21,8 +21,6 @@ class SignerIsNotAllowedException(CryptoException):
     pass
 
 
-class AccountDoesNotExistException(RuntimeError):
-    pass
-
-class MultipleResultsException(RuntimeError):
-    pass
+class AccountDoesNotExistException(RuntimeError): pass
+class MultipleResultsException(RuntimeError): pass
+class OperationNotSupported(RuntimeError): pass

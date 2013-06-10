@@ -8,7 +8,7 @@ logging.basicConfig()
 log = logging.getLogger(__file__)
 
 from members2accounts.config import Config
-from members2accounts.exc import AccountDoesNotExistException, MultipleResultsException
+from members2accounts.exc import AccountDoesNotExistException, MultipleResultsException, OperationNotSupported
 
 class Accounts(object):
     def __init__(self, ldap_conn=None):
@@ -34,40 +34,14 @@ class Accounts(object):
     def get_all_member_accounts(self):
         pass
 
-    # def fetch(self, member_email):
-        # account = Account(self._conn)
-        # acount.load_from_ldap_by_email()
-        # return account
-        # filter = filter_format('(&(mail=%s)(objectClass=inetOrgPerson))', [member_email])
-        # res = self._conn.search_s(self._c['people_dn'], ldap.SCOPE_ONELEVEL, filter)
-        # if len(res) == 0:
-        #     raise AccountDoesNotExistException(member_email)
-        # if len(res) > 1:
-        #     raise MultipleResultsException(member_email)
-        # # return Account(self._conn, res[0])
-        # account = Account(self._conn)
-        # account.load_from_ldap_account_info(res[0])
-        # return account
-
-    # def update(self, member):
-    #     pass
-
-    # def create(self, member):
-    #     account = Account(self._conn)
-    #     account.load_account_from_member(member)
-    #     account.save()
-    #     return account
-
-    # def revoke_membership(self, member):
-    #     pass
 
 class Account(object):
     def __init__(self, conn):
         self._c = Config()
         self._conn = conn
-        self.email = None
-        self.nickname = None
-        self.paid_until = None
+        self._email = None
+        self._nickname = None
+        self._paid_until = None
         self._ldap_dn = None
         self._dirty = set()
 
@@ -100,20 +74,8 @@ class Account(object):
             raise MultipleResultsException(self.nickname)
         return res[0]
 
-    # @property
-    # def update(self, member):
-    #     """I inspect the member object and change the account information accordingly."""
-    #     change = False
-    #     if member.email != self.email:
-    #         self.email = member.email
-    #         change = True
-    #     if member.paid_until != self.paid_until:
-    #         self.paid_until = member.paid_until
-    #         change = True
-    #     if change:
-    #         self.save()
-
     def save(self):
+        """I save the current Account to LDAP. I update exiting accounts and create new ones."""
         if self._ldap_dn:
             self.update()
         else:
@@ -122,6 +84,7 @@ class Account(object):
                 self.update()
             except AccountDoesNotExistException:
                 self.create()
+        self._dirty.clear()
 
     def create(self):
         self._ldap_dn = self._account_dn(self.nickname)
@@ -136,15 +99,44 @@ class Account(object):
             ('homeDirectory', home_directory),
             ('mail', self.email),
             ('telexNumber', str(self.paid_until)) # Abuse, I know.
-            # Don't complain. If you write a proper Schema and IOU a beer!
+            # Don't complain. If you write a proper schema you get a beer!
         ]
         member_record = [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in member_record]
         member_record.append(('object_class', ['inetOrgPerson', 'posixAccount', 'top']))
         self._conn.add_s(self._ldap_dn, member_record)
-        self._dirty = []
+        self._dirty.clear()
 
     def update(self):
         pass
+
+    @property
+    def nickname(self):
+        return self._nickname
+    @nickname.setter
+    def nickname(self, value):
+        if self._nickname != value and self._nickname is not None:
+            raise OperationNotSupported("Nickname cannot be changed.")
+        self._nickname = value
+        self._dirty.add("nickname")
+        return self._nickname
+
+    @property
+    def email(self):
+        return self._email
+    @email.setter
+    def email(self, value):
+        self._email= value
+        self._dirty.add("email")
+        return self._email
+
+    @property
+    def paid_until(self):
+        return self._paid_until
+    @paid_until.setter
+    def paid_until(self, value):
+        self._paid_until = value
+        self._dirty.add("paid_until")
+        return self._paid_until
 
     @property
     def in_ldap(self):
@@ -153,7 +145,9 @@ class Account(object):
 
     @property
     def is_dirty(self):
-        return self._dirty != []
+        if not self._dirty:
+            return False
+        return True
 
     @property
     def is_member(self):
