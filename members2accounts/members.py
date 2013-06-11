@@ -1,8 +1,8 @@
 
 import json
 import gnupg
-from members2accounts.config import Config
-from members2accounts.exc import DecryptionFailedException, UnknownSignatureException, \
+from config import Config
+from exc import DecryptionFailedException, UnknownSignatureException, \
     KeyNotTrustedException, SignerIsNotAllowedException
 
 class Members(object):

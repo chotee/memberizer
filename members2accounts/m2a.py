@@ -5,10 +5,10 @@ logging.basicConfig()
 log = logging.getLogger(__file__)
 log.setLevel(logging.DEBUG)
 
-from members2accounts.accounts import Accounts, Account
-from members2accounts.members import  Members
-from members2accounts.exc import CryptoException, AccountDoesNotExistException
-from members2accounts.reporting import ChangeReporter, PublishReport
+from accounts import Accounts, Account
+from members import  Members
+from exc import CryptoException, AccountDoesNotExistException
+from reporting import ChangeReporter, PublishReport
 
 
 class Members2Accounts():

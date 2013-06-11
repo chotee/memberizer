@@ -7,8 +7,8 @@ import logging
 logging.basicConfig()
 log = logging.getLogger(__file__)
 
-from members2accounts.config import Config
-from members2accounts.exc import AccountDoesNotExistException, MultipleResultsException, OperationNotSupported
+from config import Config
+from exc import AccountDoesNotExistException, MultipleResultsException, OperationNotSupported
 
 class Accounts(object):
     def __init__(self, ldap_conn=None):
