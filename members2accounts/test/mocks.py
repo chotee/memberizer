@@ -32,7 +32,7 @@ class Mock_Account():
         if self.email == "exists@member.nl":
             return True
         return False
-    def make_member(self):
+    def grant_membership(self):
         pass
     def save(self):
         pass

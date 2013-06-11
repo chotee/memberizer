@@ -23,7 +23,7 @@ class Members2Accounts():
             account.load_account_from_member(member)
             account.save()
             if not account.is_member():
-                account.make_member()
+                account.grant_membership()
             if member.nickname in pending_members:
                 pending_members.remove(member.nickname)
         return pending_members # this is a list of accounts that used to be members, but are not now.
@@ -34,7 +34,9 @@ class Members2Accounts():
         :param accounts_not_current_members: List of accounts that should nolonger be members.
         """
         for member in accounts_not_current_members: # All the accounts that were not in the member list.
-            accounts.revoke_membership(member) # Remove their membership attributes.
+            account = accounts.new_account()
+            account.load_account_from_member(member)
+            account.revoke_membership() # Remove their membership attributes.
 
     def go(self, accounts, members):
         """I Run the main update routine.

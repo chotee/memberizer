@@ -43,6 +43,7 @@ class Account(object):
         self._nickname = None
         self._paid_until = None
         self._ldap_dn = None
+        self._groups = None
         self._dirty = set()
 
     def load_from_ldap_account_info(self, account_info):
@@ -89,6 +90,12 @@ class Account(object):
     def create(self):
         self._ldap_dn = self._account_dn(self.nickname)
         uid, gid = self._grab_unique_ids()
+        self._create_account(gid, uid)
+        self._create_group(gid)
+        self._dirty.clear()
+
+    def _create_account(self, gid, uid):
+        """I create the people entry for the account in LDAP."""
         member_record = [
             ('cn', self.nickname),
             ('sn', self.nickname),
@@ -96,12 +103,22 @@ class Account(object):
             ('homeDirectory', ''.join([self._c['home_base'], self.nickname])),
             ('uidNumber', str(uid)),
             ('gidNumber', str(gid)),
-            ]
+        ]
         member_record.extend(self._ldap_account_structure())
         member_record = [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in member_record]
         member_record.append(('object_class', ['inetOrgPerson', 'posixAccount', 'top']))
         self._conn.add_s(self._ldap_dn, member_record)
-        self._dirty.clear()
+
+    def _create_group(self, gid):
+        """I create the group entry for the account in LDAP."""
+        group_record = [
+            ('cn', self.nickname),
+            ('gidNumber', str(gid)),
+        ]
+        group_record= [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in group_record]
+        group_record.append(('object_class', ['inetOrgPerson', 'posixAccount', 'top']))
+        group_dn = filter_format("cn=%s,%s", [self.nickname, self._c['groups_dn']])
+        self._conn.add_s(group_dn, group_record)
 
     def update(self):
         """I Assume a account has been previously created. For easy synchronisation use the save method."""
@@ -116,6 +133,22 @@ class Account(object):
             ('telexNumber', str(self.paid_until)) # Abuse, I know.
             # If you write a proper schema I'll get you a beer.
         )
+
+    def _members_dn(self):
+        members_dn = "%s,%s" % (self._c['member_group'], self._c['groups_dn'])
+        return members_dn
+
+    def grant_membership(self):
+        change = (
+            (ldap.MOD_ADD, 'memberUid', (self.nickname,)),
+        )
+        self._conn.modify_s(self._members_dn(), change)
+
+    def revoke_membership(self):
+        change = (
+            (ldap.MOD_DELETE, 'memberUid', (self.nickname,)),
+        )
+        self._conn.modify_s(self._members_dn(), change)
 
     @property
     def nickname(self):
@@ -159,7 +192,9 @@ class Account(object):
 
     @property
     def is_member(self):
-        pass
+        if self._groups is None:
+            self._load_groups_from_ldap()
+        return self._c["member_group"] in self._groups
 
     def _grab_unique_ids(self):
         # TODO: Remove race conditions!
@@ -176,3 +211,7 @@ class Account(object):
     def _account_dn(self, nickname):
         return filter_format('cn=%s,%s', [nickname, self._c['people_dn']])
 
+    def _load_groups_from_ldap(self):
+        filter = filter_format('(memberUid=%s)', [self.nickname])
+        res = self._conn.search_s(self._c['groups_dn'], ldap.SCOPE_ONELEVEL, filter)
+        self._groups = [group[1]['cn'][0] for group in res] # store the group names in a list

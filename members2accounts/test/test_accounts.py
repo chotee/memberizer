@@ -61,8 +61,21 @@ def fake_accounts(monkeypatch):
             )
         ]
     )
+    a._conn.set_return_value('search_s',
+        ('ou=groups,dc=techinc,dc=nl', ldap.SCOPE_ONELEVEL, '(memberUid=afakeaccount)', None, 0),
+        []
+    )
+
+
     return a
 
+@pytest.fixture
+def a_fake_account(fake_accounts):
+    accounts = fake_accounts
+    account = accounts.new_account()
+    member_original = Mock_Member(nickname="afakeaccount", email="afakeaccount@techinc.nl", paid_until=date(2013, 8, 12))
+    account.load_account_from_member(member_original)
+    return account
 
 class TestAccount(object):
     def test_load_from_member(self, fake_accounts):
@@ -87,21 +100,6 @@ class TestAccount(object):
         assert account.in_ldap == True
         assert not account.is_dirty
 
-    def test_update(self, fake_accounts):
-        accounts = fake_accounts
-        account = accounts.new_account()
-        member_original = Mock_Member(nickname="testcreate", email="test@techinc.nl", paid_until=date(2013, 8, 12))
-        assert account.is_dirty == False
-        account.load_account_from_member(member_original)
-        assert account.is_dirty == True
-        account.save()
-        assert account.is_dirty == False
-        member_updated = Mock_Member(nickname="testcreate", email="test@techinc.nl", paid_until=date(2013, 10, 30))
-        account.load_account_from_member(member_updated)
-        assert account.is_dirty == True
-        account.save()
-        assert account.is_dirty == False
-
     def test_getter_and_setters(self, fake_accounts):
         accs = fake_accounts
         a = accs.new_account()
@@ -122,6 +120,28 @@ class TestAccount(object):
         a.paid_until = date(2013, 8, 20)
         assert a.is_dirty == True
 
+    def test_update(self, fake_accounts):
+        accounts = fake_accounts
+        account = accounts.new_account()
+        member_original = Mock_Member(nickname="testcreate", email="test@techinc.nl", paid_until=date(2013, 8, 12))
+        assert account.is_dirty == False
+        account.load_account_from_member(member_original)
+        assert account.is_dirty == True
+        account.save()
+        assert account.is_dirty == False
+        member_updated = Mock_Member(nickname="testcreate", email="test@techinc.nl", paid_until=date(2013, 10, 30))
+        account.load_account_from_member(member_updated)
+        assert account.is_dirty == True
+        account.save()
+        assert account.is_dirty == False
+
+    def test_make_member(self, a_fake_account):
+        account = a_fake_account
+        assert account.is_member == False
+        account.grant_membership()
+#        assert account.is_member == True
+        account.revoke_membership()
+        assert account.is_member == False
 
 class TestAccounts(object):
     def test_verify_connection(self, fake_accounts):
