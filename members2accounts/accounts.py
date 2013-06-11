@@ -88,26 +88,34 @@ class Account(object):
 
     def create(self):
         self._ldap_dn = self._account_dn(self.nickname)
-        home_directory = ''.join([self._c['home_base'], self.nickname])
-        (uid, gid) = self._grab_unique_ids()
+        uid, gid = self._grab_unique_ids()
         member_record = [
             ('cn', self.nickname),
             ('sn', self.nickname),
             ('uid', self.nickname),
+            ('homeDirectory', ''.join([self._c['home_base'], self.nickname])),
             ('uidNumber', str(uid)),
             ('gidNumber', str(gid)),
-            ('homeDirectory', home_directory),
-            ('mail', self.email),
-            ('telexNumber', str(self.paid_until)) # Abuse, I know.
-            # Don't complain. If you write a proper schema you get a beer!
-        ]
+            ]
+        member_record.extend(self._ldap_account_structure())
         member_record = [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in member_record]
         member_record.append(('object_class', ['inetOrgPerson', 'posixAccount', 'top']))
         self._conn.add_s(self._ldap_dn, member_record)
         self._dirty.clear()
 
     def update(self):
-        pass
+        """I Assume a account has been previously created. For easy synchronisation use the save method."""
+        assert self._ldap_dn is not None
+        mods = [(ldap.MOD_REPLACE, e[0], ldap.filter.escape_filter_chars(e[1])) for e in self._ldap_account_structure() ]
+        self._conn.modify_s(self._ldap_dn, mods)
+
+    def _ldap_account_structure(self):
+        '''I represent the parts of the LDAP structure that can be changed after '''
+        return (
+            ('mail', self.email),
+            ('telexNumber', str(self.paid_until)) # Abuse, I know.
+            # If you write a proper schema I'll get you a beer.
+        )
 
     @property
     def nickname(self):
