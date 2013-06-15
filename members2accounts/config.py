@@ -1,15 +1,29 @@
+import sys
+import argparse
+from ConfigParser import ConfigParser
+
 _CONFIG_INST = None
 def Config(custom_values=None):
     global _CONFIG_INST
     if _CONFIG_INST is None:
-        _CONFIG_INST = _Config(custom_values)
+        _CONFIG_INST = Defaults(custom_values)
     return _CONFIG_INST
 
 def Config_reset():
     global  _CONFIG_INST
     _CONFIG_INST = None
 
-class _Config(dict):
+def Config_set(cmd_line=None):
+    if cmd_line is None:
+        cmd_line = sys.argv[1:]
+    parser = argparse.ArgumentParser(description="I read a properly signed json file with memberdata and create the accounts in LDAP.")
+    parser.add_argument('-C', '--config')
+    res = parser.parse_args(args=cmd_line)
+#    if res.config:
+#        ConfigParser(defaults)
+    return Config()
+
+class Defaults(dict):
     def __init__(self, custom_values=None):
         self.update({
             # GPG elements.
@@ -20,9 +34,9 @@ class _Config(dict):
             ], # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
 
             # LDAP server access..
-            'server_uri': None, #'ldap://192.168.122.224',
-            'admin_user': '', #'cn=admin,dc=techinc,dc=nl',
-            'admin_pass': '', #'SomeThingSecret',
+            'server_uri': '',#'ldap://192.168.122.224',
+            'admin_user': '',#'cn=root,dc=techinc,dc=nl',
+            'admin_pass': '',#'test',
             # LDAP Structure.
             'base_dn': 'dc=techinc,dc=nl',
             'people_dn': 'ou=people,dc=techinc,dc=nl', #
@@ -34,3 +48,7 @@ class _Config(dict):
         })
         if custom_values:
             self.update(custom_values)
+    def __getattr__(self, item):
+        if item in self:
+            return self[item]
+        raise AttributeError(item)

@@ -4,7 +4,7 @@ import py
 import pytest
 
 from members2accounts.members import Members, Member
-from members2accounts.config import Config, _Config
+from members2accounts.config import Config, Defaults
 from members2accounts.exc import *
 
 def fixture_file(name):
