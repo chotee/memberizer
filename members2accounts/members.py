@@ -16,7 +16,7 @@ class Members(object):
     def decrypt_and_verify(self, keyring=None):
         """I use GPG to decrypt the file and verify that it is to be trusted."""
         if keyring is None:
-            keyring = Config['gpg_keyring']
+            keyring = Config.gpg.keyring
         gpg = gnupg.GPG(gnupghome=keyring)
 
         assert self.member_fd is not None
@@ -34,7 +34,7 @@ class Members(object):
         return True
 
     def _is_allowed(self, dec_data):
-        for fpr in Config()['gpg_allowed_ids']:
+        for fpr in Config().gpg.allowed_ids:
             canonical_fpr = fpr.replace(' ', '')
             if canonical_fpr == dec_data.pubkey_fingerprint:
                 return True

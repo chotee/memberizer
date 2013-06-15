@@ -13,7 +13,7 @@ from exc import AccountDoesNotExistException, MultipleResultsException, Operatio
 class Accounts(object):
     def __init__(self, ldap_conn=None):
         log.debug("Connecting")
-        self._c = Config()
+        self._c = Config().ldap
         if ldap_conn:
             self._conn = ldap_conn
         else:
@@ -57,7 +57,7 @@ class Account(object):
     def load_from_ldap_by_nickname(self, nickname=None):
         nickname = self.nickname if nickname is None else nickname
         nickname_filter = filter_format('(&(objectClass=inetOrgPerson)(cn=%s))', [nickname])
-        res = self._ldap_search_one(self._c['people_dn'], ldap.SCOPE_ONELEVEL, nickname_filter)
+        res = self._ldap_search_one(self._c.ldap.people_dn, ldap.SCOPE_ONELEVEL, nickname_filter)
         self.load_from_ldap_account_info(res)
 
     def load_account_from_member(self, member):
@@ -100,7 +100,7 @@ class Account(object):
             ('cn', self.nickname),
             ('sn', self.nickname),
             ('uid', self.nickname),
-            ('homeDirectory', ''.join([self._c['home_base'], self.nickname])),
+            ('homeDirectory', ''.join([self._c.ldap.home_base, self.nickname])),
             ('uidNumber', str(uid)),
             ('gidNumber', str(gid)),
         ]
@@ -117,7 +117,7 @@ class Account(object):
         ]
         group_record= [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in group_record]
         group_record.append(('object_class', ['inetOrgPerson', 'posixAccount', 'top']))
-        group_dn = filter_format("cn=%s,%s", [self.nickname, self._c['groups_dn']])
+        group_dn = filter_format("cn=%s,%s", [self.nickname, self._c.ldap.groups_dn])
         self._conn.add_s(group_dn, group_record)
 
     def update(self):
@@ -135,7 +135,7 @@ class Account(object):
         )
 
     def _members_dn(self):
-        members_dn = "%s,%s" % (self._c['member_group'], self._c['groups_dn'])
+        members_dn = "%s,%s" % (self._c.ldap.member_group, self._c.ldap.groups_dn)
         return members_dn
 
     def grant_membership(self):
@@ -194,24 +194,24 @@ class Account(object):
     def is_member(self):
         if self._groups is None:
             self._load_groups_from_ldap()
-        return self._c["member_group"] in self._groups
+        return self._c.ldap.member_group in self._groups
 
     def _grab_unique_ids(self):
         # TODO: Remove race conditions!
-        res = self._conn.search_s(self._c['free_id_dn'], ldap.SCOPE_BASE)
+        res = self._conn.search_s(self._c.ldap.free_id_dn, ldap.SCOPE_BASE)
         uid = res[0][1]['uidNumber'][0]
         gid = res[0][1]['gidNumber'][0]
         update_res = [
             (ldap.MOD_REPLACE, 'uidNumber', str(int(uid)+1)),
             (ldap.MOD_REPLACE, 'gidNumber', str(int(gid)+1)),
         ]
-        self._conn.modify_s(self._c['free_id_dn'], update_res)
+        self._conn.modify_s(self._c.ldap.free_id_dn, update_res)
         return uid, gid
 
     def _account_dn(self, nickname):
-        return filter_format('cn=%s,%s', [nickname, self._c['people_dn']])
+        return filter_format('cn=%s,%s', [nickname, self._c.ldap.people_dn])
 
     def _load_groups_from_ldap(self):
         filter = filter_format('(memberUid=%s)', [self.nickname])
-        res = self._conn.search_s(self._c['groups_dn'], ldap.SCOPE_ONELEVEL, filter)
+        res = self._conn.search_s(self._c.ldap.groups_dn, ldap.SCOPE_ONELEVEL, filter)
         self._groups = [group[1]['cn'][0] for group in res] # store the group names in a list

@@ -42,7 +42,7 @@ class TestMembers(object):
         pytest.raises(KeyNotTrustedException, m.decrypt_and_verify, fixture_file('test_keyring_not_trusted'))
 
     def test_decrypt_and_verify_not_allowed(self, monkeypatch):
-        monkeypatch.setitem(Config(), 'gpg_allowed_ids', [])
+        monkeypatch.setitem(Config().gpg, 'allowed_ids', [])
         m = Members(fixture_file('test_members.json.gpg'))
         pytest.raises(SignerIsNotAllowedException, m.decrypt_and_verify, fixture_file('test_keyring'))
 
