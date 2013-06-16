@@ -3,10 +3,10 @@ import argparse
 from ConfigParser import SafeConfigParser
 
 _CONFIG_INST = None
-def Config(custom_values=None):
+def Config():
     global _CONFIG_INST
     if _CONFIG_INST is None:
-        _CONFIG_INST = Defaults(custom_values)
+        _CONFIG_INST = _Config()
     return _CONFIG_INST
 
 def Config_reset():
@@ -14,9 +14,9 @@ def Config_reset():
     _CONFIG_INST = None
 
 def Config_set(cmd_line=None):
-    c = SafeConfigParser(Defaults())
     if cmd_line is None:
-        cmd_line = sys.argv[1:]
+        cmd_line = []
+    c = SafeConfigParser(Defaults())
     parser = argparse.ArgumentParser(description="I read a properly signed json file with memberdata and create the accounts in LDAP.")
     parser.add_argument('-C', '--config-file')
     parser.add_argument('-W', '--write-config', metavar="FILE", help="Write current configuration to FILE")
@@ -26,16 +26,29 @@ def Config_set(cmd_line=None):
         c.readfp(fd, res.config_file)
 #    if res.config:
 #        ConfigParser(defaults)
-    return Config()
+    return Defaults()
+
+class _Config(object):
+    def __init__(self, settings=None):
+        if settings is None:
+            settings = Config_set()
+        self._data = {}
+        for key, value in settings.iteritems():
+            if isinstance(value, dict): # dictionary like object.
+                self._data[key] = _Config(value)
+            else:
+                self._data[key] = value
+    def __getattr__(self, item):
+        try:
+            return self._data[item]
+        except KeyError:
+            raise AttributeError(item)
 
 class DictArgs(dict):
-    def __getattr__(self, item):
-        if item in self:
-            return self[item]
-        raise AttributeError(item)
+    pass
 
 class Defaults(DictArgs):
-    def __init__(self, custom_values=None):
+    def __init__(self):
         self.update({
             'gpg': DictArgs({ # GPG elements.
                 'keyring': None, # directory with the GPG keyring. None will give the default location for the user.
@@ -59,5 +72,3 @@ class Defaults(DictArgs):
                                       # These keys also have to be added to the keyring.
                }),
         })
-        if custom_values:
-            self.update(custom_values)
