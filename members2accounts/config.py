@@ -3,10 +3,10 @@ import json
 import argparse
 
 _CONFIG_INST = None
-def Config():
+def Config(**kwargs):
     global _CONFIG_INST
     if _CONFIG_INST is None:
-        _CONFIG_INST = Config_set()
+        _CONFIG_INST = Config_set(**kwargs)
     return _CONFIG_INST
 
 def Config_reset():
@@ -15,21 +15,17 @@ def Config_reset():
 
 def Config_set(cmd_line=None, custom=None):
     data = Defaults.copy()
-#     if cmd_line is None:
-#         cmd_line = []
-#     c = Defaults.copy()
-#     parser = argparse.ArgumentParser(description="I read a properly signed json file with memberdata and create the accounts in LDAP.")
-#     parser.add_argument('-C', '--config-file')
-#     parser.add_argument('-W', '--write-config', metavar="FILE", help="Write current configuration to FILE")
-#     res = parser.parse_args(args=cmd_line)
-#     if res.config_file:
-#         fd = open(res.config_file, 'rb')
-#         config_settings = json.load(fd)
-#         for section_name, section_items in config_settings.iteritems():
-#             c.setdefault(section_name, {}).update(section_items)
-# #        c.readfp(fd, res.config_file)
-# #    if res.config:
-# #        ConfigParser(defaults)
+    if cmd_line is None:
+         cmd_line = []
+    parser = argparse.ArgumentParser(description="I read a properly signed json file with memberdata and create the accounts in LDAP.")
+    parser.add_argument('-C', '--config-file')
+    parser.add_argument('-W', '--write-config', metavar="FILE", help="Write current configuration to FILE")
+    res = parser.parse_args(args=cmd_line)
+    if res.config_file:
+        fd = open(res.config_file, 'rb')
+        config_file_settings = json.load(fd)
+        for section_name, section_items in config_file_settings.iteritems():
+            data.setdefault(section_name, {}).update(section_items)
     return _config_section(data)
 
 def _config_section(settings):
