@@ -12,15 +12,19 @@ from exc import AccountDoesNotExistException, MultipleResultsException, Operatio
 
 class Accounts(object):
     def __init__(self, ldap_conn=None):
-        log.debug("Connecting")
         self._c = Config().ldap
+        if ldap_conn is not None:
+            self.connect(ldap_conn)
+        self._listeners = []
+
+    def connect(self, ldap_conn=None):
+        log.debug("Connecting")
         if ldap_conn:
             self._conn = ldap_conn
         else:
-            self._conn = ldap.initialize(self._c.server_uri)
+            self._conn = ldap.initialize(self._c.uri)
         self._conn.simple_bind_s(self._c.admin_user, self._c.admin_pass)
-        log.info("Connected to %s %s as %s", self._c.server_uri, self._c.base_dn, self._c.admin_user)
-        self._listeners = []
+        log.info("Connected to %s %s as %s", self._c.uri, self._c.base_dn, self._c.admin_user)
 
     def verify_connection(self):
         self._conn.search_s(self._c.people_dn,ldap.SCOPE_BASE)

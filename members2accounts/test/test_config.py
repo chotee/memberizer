@@ -17,9 +17,14 @@ class Test_SetConfig(object):
     def test_custom_config_file(self, clean_config):
         cmd_line = "-C %s" % py.path.local(__file__).join('..').join('config_custom.json').realpath()
         config = Config(cmd_line=cmd_line.split())
-        assert config.ldap.base_dn == 'dc=test,dc=com'
+        assert 'dc=test,dc=com' == config.ldap.base_dn
+
+    def test_custom_cmd_line(self, clean_config):
+        cmd_line = "--ldap.uri ldaps://ldap.example.com"
+        config = Config(cmd_line=cmd_line.split())
+        assert "ldaps://ldap.example.com" == config.ldap.uri
 
     @pytest.mark.xfail
-    def test_write_config_to_file(self):
+    def test_write_config_to_file(self, clean_config, tmpdir):
         # Must still implement
         assert False

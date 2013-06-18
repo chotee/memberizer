@@ -9,7 +9,7 @@ from accounts import Accounts, Account
 from members import  Members
 from exc import CryptoException, AccountDoesNotExistException
 from reporting import ChangeReporter, PublishReport
-from config import Config_set
+from config import Config
 
 
 class Members2Accounts():
@@ -59,5 +59,5 @@ class Members2Accounts():
 
 
 if __name__ == "__main__":
-    config = Config_set()
+    config = Config(cmd_line=sys.argv[1:])
     Members2Accounts.go(Accounts(), Members(config.member_file))

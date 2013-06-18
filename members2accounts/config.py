@@ -1,6 +1,7 @@
 import sys
 import json
 import argparse
+from ast import literal_eval
 
 _CONFIG_INST = None
 def Config(**kwargs):
@@ -13,19 +14,48 @@ def Config_reset():
     global  _CONFIG_INST
     _CONFIG_INST = None
 
+def _config_read_json_file(data, res):
+    fd = open(res.config_file, 'rb')
+    config_file_settings = json.load(fd)
+    for section_name, section_items in config_file_settings.iteritems():
+        data.setdefault(section_name, {}).update(section_items)
+
+def _config_cmdline_options(data):
+    parser = argparse.ArgumentParser(
+        description="I read a properly signed json file with memberdata and create the accounts in LDAP.")
+    parser.add_argument('-C', '--config-file', metavar="FILE", help="The JSON configuration file to use")
+    parser.add_argument('-W', '--write-config', metavar="FILE", help="Write current configuration to FILE")
+    for section_name, section_value in data.iteritems():
+        for option_name, option_value in section_value.iteritems():
+            cmd_option_name = "--%s.%s" % (section_name, option_name)
+            help_value = "default: %s" % option_value
+            parser.add_argument(cmd_option_name, help=help_value)
+    return parser
+
+def _config_handle_cmdline_options(data, res):
+    for cmd_name, cmd_value in vars(res).iteritems():
+        if cmd_value is None: continue
+        if '.' in cmd_name:
+            section, option = cmd_name.split('.')
+            try:
+                value = literal_eval(cmd_value)
+            except SyntaxError:
+                value = literal_eval(repr(cmd_value))
+            data[section][option] = value
+
 def Config_set(cmd_line=None, custom=None):
     data = Defaults.copy()
     if cmd_line is None:
          cmd_line = []
-    parser = argparse.ArgumentParser(description="I read a properly signed json file with memberdata and create the accounts in LDAP.")
-    parser.add_argument('-C', '--config-file')
-    parser.add_argument('-W', '--write-config', metavar="FILE", help="Write current configuration to FILE")
+    parser = _config_cmdline_options(data)
     res = parser.parse_args(args=cmd_line)
     if res.config_file:
-        fd = open(res.config_file, 'rb')
-        config_file_settings = json.load(fd)
-        for section_name, section_items in config_file_settings.iteritems():
-            data.setdefault(section_name, {}).update(section_items)
+        _config_read_json_file(data, res)
+    _config_handle_cmdline_options(data, res)
+    if res.write_config:
+        fd = open(res.write_config, 'wb')
+        json.dump(data, fd)
+        fd.close()
     return _config_section(data)
 
 def _config_section(settings):
@@ -57,7 +87,7 @@ Defaults = {
     },
     'ldap': {
         # LDAP server access..
-        'server_uri': '',#'ldap://192.168.122.224',
+        'uri': '',#'ldap://192.168.122.224',
         'admin_user': '',#'cn=root,dc=techinc,dc=nl',
         'admin_pass': '',#'test',
         # LDAP Structure.
