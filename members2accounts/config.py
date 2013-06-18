@@ -29,7 +29,7 @@ def _config_cmdline_options(data):
         for option_name, option_value in section_value.iteritems():
             cmd_option_name = "--%s.%s" % (section_name, option_name)
             help_value = "default: %s" % option_value
-            parser.add_argument(cmd_option_name, help=help_value)
+            parser.add_argument(cmd_option_name, metavar=option_name.upper(), help=help_value)
     return parser
 
 def _config_handle_cmdline_options(data, res):
@@ -43,8 +43,18 @@ def _config_handle_cmdline_options(data, res):
                 value = literal_eval(repr(cmd_value))
             data[section][option] = value
 
-def Config_set(cmd_line=None, custom=None):
-    data = Defaults.copy()
+def _config_write_file(data, res):
+    if res.write_config:
+        fd = open(res.write_config, 'wb')
+        json.dump(data, fd,
+                  sort_keys=True, indent=4, separators=(',', ': '))
+        fd.close()
+
+def Config_set(cmd_line=None, custom_data=None):
+    if not custom_data:
+        data = Defaults.copy()
+    else:
+        data = custom_data
     if cmd_line is None:
          cmd_line = []
     parser = _config_cmdline_options(data)
@@ -52,10 +62,7 @@ def Config_set(cmd_line=None, custom=None):
     if res.config_file:
         _config_read_json_file(data, res)
     _config_handle_cmdline_options(data, res)
-    if res.write_config:
-        fd = open(res.write_config, 'wb')
-        json.dump(data, fd)
-        fd.close()
+    _config_write_file(data, res)
     return _config_section(data)
 
 def _config_section(settings):
@@ -80,9 +87,9 @@ class _Config(object):
 Defaults = {
     'gpg': { # GPG elements.
         'keyring': None, # directory with the GPG keyring. None will give the default location for the user.
-        'my_id': '7C7F 7435 140C E92E BB33  6CF7 8367 1848 9BB7 D7C7', # Fingerprint of the key that the automation uses to decrypt and sign
+        'my_id': 'THE PROCESS FINGERPRINT', # Fingerprint of the key that the automation uses to decrypt and sign
         'allowed_ids' : [
-            '8044 9D3E 6EAC E4D9 C4D2  A5D7 6752 C3BC 94DA 7C30',
+            'FINGERPRINTS THAT ARE ALLOWED TO SIGN UPDATES',
         ], # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
     },
     'ldap': {

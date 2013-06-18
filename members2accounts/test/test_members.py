@@ -4,7 +4,7 @@ import py
 import pytest
 
 from members2accounts.members import Members, Member
-from members2accounts.config import Config, Defaults
+from members2accounts.config import Config, Defaults, Config_reset
 from members2accounts.exc import *
 
 def fixture_file(name):
@@ -14,6 +14,17 @@ def fixture_file(name):
 def fixture_stream(name):
     return open(fixture_file(name), 'rb')
 
+@pytest.fixture
+def Set_GPG_Test_Fingerprints():
+    Config_reset()
+    data = Defaults.copy()
+    data['gpg']['my_id'] = '7C7F 7435 140C E92E BB33  6CF7 8367 1848 9BB7 D7C7', # Fingerprint of the key that the automation uses to decrypt and sign
+    data['gpg']['allowed_ids'] = [
+            '8044 9D3E 6EAC E4D9 C4D2  A5D7 6752 C3BC 94DA 7C30',
+        ] # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
+    Config(custom_data=data)
+
+@pytest.mark.usefixtures("Set_GPG_Test_Fingerprints")
 class TestMembers(object):
     def test_load_member_data(self):
         m = Members()

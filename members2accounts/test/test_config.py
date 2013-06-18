@@ -24,7 +24,9 @@ class Test_SetConfig(object):
         config = Config(cmd_line=cmd_line.split())
         assert "ldaps://ldap.example.com" == config.ldap.uri
 
-    @pytest.mark.xfail
     def test_write_config_to_file(self, clean_config, tmpdir):
-        # Must still implement
-        assert False
+        config_fn = tmpdir.join("config.json")
+        cmd_line = "-W %s" % config_fn
+        config = Config(cmd_line=cmd_line.split())
+        fd = config_fn.open()
+
