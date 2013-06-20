@@ -1,11 +1,12 @@
+import sys
 import ldap
 from ldap.filter import filter_format
 
 import datetime
 
 import logging
-logging.basicConfig()
-log = logging.getLogger(__file__)
+
+log = logging.getLogger(__name__)
 
 from config import Config
 from exc import AccountDoesNotExistException, MultipleResultsException, OperationNotSupported
@@ -23,8 +24,13 @@ class Accounts(object):
             self._conn = ldap_conn
         else:
             self._conn = ldap.initialize(self._c.uri)
-        self._conn.simple_bind_s(self._c.admin_user, self._c.admin_pass)
-        log.info("Connected to %s %s as %s", self._c.uri, self._c.base_dn, self._c.admin_user)
+        log.info("Connecting to %s %s as %s", self._c.uri, self._c.base_dn, self._c.admin_user)
+        try:
+            self._conn.simple_bind_s(self._c.admin_user, self._c.admin_pass)
+        except ldap.SERVER_DOWN:
+            log.fatal("Could not log into %s as %s", self._c.uri, self._c.admin_user)
+            sys.exit(1)
+        log.info("connected!")
 
     def verify_connection(self):
         self._conn.search_s(self._c.people_dn,ldap.SCOPE_BASE)

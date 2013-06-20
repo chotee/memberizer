@@ -5,6 +5,7 @@ from datetime import date
 from members2accounts.exc import AccountDoesNotExistException
 
 class Mock_Accounts():
+    def connect(self): pass
     def verify_connection(self): pass
     def publish_changes_to(self, report): pass
     def get_all_member_accounts(self): return [Mock_Account("exists@member.nl"),]

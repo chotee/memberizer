@@ -3,6 +3,9 @@ import json
 import argparse
 from ast import literal_eval
 
+import logging
+log = logging.getLogger(__name__)
+
 _CONFIG_INST = None
 def Config(**kwargs):
     global _CONFIG_INST
@@ -50,6 +53,7 @@ def _config_write_file(data, res):
         json.dump(data, fd,
                   sort_keys=True, indent=4, separators=(',', ': '))
         fd.close()
+        sys.exit()
 
 def Config_set(cmd_line=None, custom_data=None):
     if not custom_data:
@@ -64,8 +68,7 @@ def Config_set(cmd_line=None, custom_data=None):
         _config_read_json_file(data, res)
     _config_handle_cmdline_options(data, res)
     _config_write_file(data, res)
-    if res.members_file:
-        data['members_file'] = res.members_file
+    data['members_file'] = res.members_file
     return _config_section(data)
 
 def _config_section(settings):
@@ -75,6 +78,11 @@ def _config_section(settings):
             option_value = _config_section(option_value)
         data[option_name] = option_value
     return _Config(data)
+
+def Config_sanity(config):
+    if config.members_file is None:
+        log.fatal("Missing members file.")
+        sys.exit(1)
 
 
 class _Config(object):
@@ -90,7 +98,7 @@ class _Config(object):
 Defaults = {
     'gpg': { # GPG elements.
         'keyring': None, # directory with the GPG keyring. None will give the default location for the user.
-        'my_id': 'THE FINGERPRINT OF THE UPDATER', # Fingerprint of the key that the automation uses to decrypt and sign
+        'my_id': 'FINGERPRINT OF UPDATE PROCESS', # Fingerprint of the key that the automation uses to decrypt and sign
         'allowed_ids' : [
             'FINGERPRINTS THAT SIGN UPDATES',
         ], # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!

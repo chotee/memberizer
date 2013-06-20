@@ -2,14 +2,14 @@ import sys
 import logging
 
 logging.basicConfig()
-log = logging.getLogger(__file__)
+log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 from accounts import Accounts, Account
 from members import  Members
 from exc import CryptoException, AccountDoesNotExistException
 from reporting import ChangeReporter, PublishReport
-from config import Config
+from config import Config, Config_sanity
 
 
 class Members2Accounts():
@@ -44,6 +44,7 @@ class Members2Accounts():
         :param accounts: Access to the accounts (this is what we will be modifying)
         :param members: List of all the current members.
         """
+        accounts.connect()
         accounts.verify_connection() # Pre-flight test of member database
 
         members.decrypt_and_verify() # Check that the member change document is trustable.
@@ -58,5 +59,8 @@ class Members2Accounts():
         PublishReport(report.generate_overview()) # Lets publish a report with the changes.
 
 if __name__ == "__main__":
+    log.info("Starting")
     config = Config(cmd_line=sys.argv[1:])
-    Members2Accounts.go(Accounts(), Members(config.members_file))
+    Config_sanity(config)
+    Members2Accounts().go(Accounts(), Members(config.members_file))
+    log.info("End.")
