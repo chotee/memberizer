@@ -1,4 +1,5 @@
 import sys
+from copy import deepcopy
 import json
 import argparse
 from ast import literal_eval
@@ -42,7 +43,10 @@ def _config_handle_cmdline_options(data, res):
         if '.' in cmd_name:
             section, option = cmd_name.split('.')
             try:
-                value = literal_eval(cmd_value)
+                try:
+                    value = literal_eval(cmd_value)
+                except ValueError:
+                    value = cmd_value
             except SyntaxError:
                 value = literal_eval(repr(cmd_value))
             data[section][option] = value
@@ -57,7 +61,7 @@ def _config_write_file(data, res):
 
 def Config_set(cmd_line=None, custom_data=None):
     if not custom_data:
-        data = Defaults.copy()
+        data = deepcopy(Defaults)
     else:
         data = custom_data
     if cmd_line is None:
@@ -79,10 +83,19 @@ def _config_section(settings):
         data[option_name] = option_value
     return _Config(data)
 
+def fatal(*args):
+    log.fatal(*args)
+    sys.exit(1)
+
 def Config_sanity(config):
-    if config.members_file is None:
-        log.fatal("Missing members file.")
-        sys.exit(1)
+    if not config.members_file:
+        fatal("Missing members file.")
+    if not config.ldap.uri:
+        fatal("Missing LDAP URI. Set --ldap.uri .")
+    elif ":" not in config.ldap.uri:
+        fatal("LDAP credentials '%s' not in the URI format. Must be scheme:location", config.ldap.uri)
+    if not config.ldap.user or not config.ldap.passwd:
+        fatal("Missing LDAP credentials.. Set --ldap.user and --ldap.passwd")
 
 
 class _Config(object):
@@ -106,8 +119,8 @@ Defaults = {
     'ldap': {
         # LDAP server access..
         'uri': '',#'ldap://192.168.122.224',
-        'admin_user': '',#'cn=root,dc=techinc,dc=nl',
-        'admin_pass': '',#'test',
+        'user': '',#'cn=root,dc=techinc,dc=nl',
+        'passwd': '',#'test',
         # LDAP Structure.
         'base_dn': 'dc=techinc,dc=nl',
         'people_dn': 'ou=people,dc=techinc,dc=nl', #

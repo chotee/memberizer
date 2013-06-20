@@ -24,11 +24,11 @@ class Accounts(object):
             self._conn = ldap_conn
         else:
             self._conn = ldap.initialize(self._c.uri)
-        log.info("Connecting to %s %s as %s", self._c.uri, self._c.base_dn, self._c.admin_user)
+        log.info("Connecting to %s %s as %s", self._c.uri, self._c.base_dn, self._c.user)
         try:
-            self._conn.simple_bind_s(self._c.admin_user, self._c.admin_pass)
+            self._conn.simple_bind_s(self._c.user, self._c.passwd)
         except ldap.SERVER_DOWN:
-            log.fatal("Could not log into %s as %s", self._c.uri, self._c.admin_user)
+            log.fatal("Could not log into %s as %s", self._c.uri, self._c.user)
             sys.exit(1)
         log.info("connected!")
 
