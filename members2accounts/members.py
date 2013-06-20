@@ -16,7 +16,7 @@ class Members(object):
     def decrypt_and_verify(self, keyring=None):
         """I use GPG to decrypt the file and verify that it is to be trusted."""
         if keyring is None:
-            keyring = Config.gpg.keyring
+            keyring = Config().gpg.keyring
         gpg = gnupg.GPG(gnupghome=keyring)
 
         assert self.member_fd is not None

@@ -30,6 +30,12 @@ class Accounts(object):
         except ldap.SERVER_DOWN:
             log.fatal("Could not log into %s as %s", self._c.uri, self._c.user)
             sys.exit(1)
+        except ldap.INVALID_DN_SYNTAX:
+            log.fatal("Invalid DN syntax: %s", self._c.user)
+            sys.exit(1)
+        except ldap.INVALID_CREDENTIALS:
+            log.fatal("Username or password incorrect for %s user %s", self._c.uri, self._c.user)
+            sys.exit(1)
         log.info("connected!")
 
     def verify_connection(self):
