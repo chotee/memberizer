@@ -24,9 +24,13 @@ class Test_SetConfig(object):
         config = Config(cmd_line=cmd_line.split())
         assert "ldaps://ldap.example.com" == config.ldap.uri
 
+    def test_member_file(self, clean_config):
+        cmd_line = 'members.json'
+        config = Config(cmd_line=cmd_line.split())
+        assert 'members.json' == config.members_file
+
     def test_write_config_to_file(self, clean_config, tmpdir):
         config_fn = tmpdir.join("config.json")
         cmd_line = "-W %s" % config_fn
         config = Config(cmd_line=cmd_line.split())
         fd = config_fn.open()
-

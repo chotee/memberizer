@@ -23,6 +23,7 @@ def _config_read_json_file(data, res):
 def _config_cmdline_options(data):
     parser = argparse.ArgumentParser(
         description="I read a properly signed json file with memberdata and create the accounts in LDAP.")
+    parser.add_argument('members_file', metavar="MEMBERS-FILE", help="The GPG signed members file JSON format", nargs="?")
     parser.add_argument('-C', '--config-file', metavar="FILE", help="The JSON configuration file to use")
     parser.add_argument('-W', '--write-config', metavar="FILE", help="Write current configuration to FILE")
     for section_name, section_value in data.iteritems():
@@ -63,6 +64,8 @@ def Config_set(cmd_line=None, custom_data=None):
         _config_read_json_file(data, res)
     _config_handle_cmdline_options(data, res)
     _config_write_file(data, res)
+    if res.members_file:
+        data['members_file'] = res.members_file
     return _config_section(data)
 
 def _config_section(settings):
@@ -87,9 +90,9 @@ class _Config(object):
 Defaults = {
     'gpg': { # GPG elements.
         'keyring': None, # directory with the GPG keyring. None will give the default location for the user.
-        'my_id': 'THE PROCESS FINGERPRINT', # Fingerprint of the key that the automation uses to decrypt and sign
+        'my_id': 'THE FINGERPRINT OF THE UPDATER', # Fingerprint of the key that the automation uses to decrypt and sign
         'allowed_ids' : [
-            'FINGERPRINTS THAT ARE ALLOWED TO SIGN UPDATES',
+            'FINGERPRINTS THAT SIGN UPDATES',
         ], # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
     },
     'ldap': {

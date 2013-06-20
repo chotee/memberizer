@@ -57,7 +57,6 @@ class Members2Accounts():
 
         PublishReport(report.generate_overview()) # Lets publish a report with the changes.
 
-
 if __name__ == "__main__":
     config = Config(cmd_line=sys.argv[1:])
-    Members2Accounts.go(Accounts(), Members(config.member_file))
+    Members2Accounts.go(Accounts(), Members(config.members_file))
