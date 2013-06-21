@@ -15,7 +15,6 @@ class Accounts(object):
         self._c = Config().ldap
         if ldap_conn is not None:
             self.connect(ldap_conn)
-        self._listeners = []
 
     def connect(self, ldap_conn=None):
         log.debug("Connecting")
@@ -40,15 +39,26 @@ class Accounts(object):
     def verify_connection(self):
         self._conn.search_s(self._c.people_dn,ldap.SCOPE_BASE)
 
-    def publish_changes_to(self, report):
-        self._listeners.append(report)
-
     def new_account(self):
         return Account(self._conn)
 
     def get_all_member_accounts(self):
-        pass
+        """I return a list of Account objects for all member-accounts in LDAP"""
+        member_group_filter = '(cn=%s)' % self._c.member_group
+        member_cns = self._conn.search_s(self._c.groups_dn, ldap.SCOPE_ONELEVEL, member_group_filter)[0][1]['memberUid']
+        member_filter = "(|(cn=" + "),(cn=".join(member_cns) + '))'
+        list_of_account_data = self._conn.search_s(self._c.people_dn, ldap.SCOPE_ONELEVEL, member_filter)
+        list_of_accounts = []
+        for account_data in list_of_account_data:
+            account = Account(self._conn)
+            account.load_from_ldap_account_info(account_data)
+            list_of_accounts.append(account)
+        log.info("There are %d member accounts", len(list_of_accounts))
+        return list_of_accounts
 
+    def _members_dn(self):
+        members_dn = "cn=%s,%s" % (self._c.member_group, self._c.groups_dn)
+        return members_dn
 
 class Account(object):
     def __init__(self, conn):
@@ -122,7 +132,10 @@ class Account(object):
         member_record.extend(self._ldap_account_structure())
         member_record = [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in member_record]
         member_record.append(('object_class', ['inetOrgPerson', 'posixAccount', 'top']))
+        log.info("Adding account %s", self._ldap_dn)
+        log.debug("with attributes: %s", member_record)
         self._conn.add_s(self._ldap_dn, member_record)
+        log.debug("Added.")
 
     def _create_group(self, gid):
         """I create the group entry for the account in LDAP."""
@@ -133,13 +146,19 @@ class Account(object):
         group_record= [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in group_record]
         group_record.append(('object_class', ['inetOrgPerson', 'posixAccount', 'top']))
         group_dn = filter_format("cn=%s,%s", [self.nickname, self._c.ldap.groups_dn])
+        log.info("Adding group %s", group_dn)
+        log.debug("with attributes: %s", group_record)
         self._conn.add_s(group_dn, group_record)
+        log.debug("Added.")
 
     def update(self):
         """I Assume a account has been previously created. For easy synchronisation use the save method."""
         assert self._ldap_dn is not None
         mods = [(ldap.MOD_REPLACE, e[0], ldap.filter.escape_filter_chars(e[1])) for e in self._ldap_account_structure() ]
+        log.info("Changing %s", self.nickname)
+        log.debug("Change: %s -> %s", self._ldap_dn, mods)
         self._conn.modify_s(self._ldap_dn, mods)
+        log.debug("Changed.")
 
     def _ldap_account_structure(self):
         '''I represent the parts of the LDAP structure that can be changed after '''
@@ -150,20 +169,26 @@ class Account(object):
         )
 
     def _members_dn(self):
-        members_dn = "%s,%s" % (self._c.ldap.member_group, self._c.ldap.groups_dn)
+        members_dn = "cn=%s,%s" % (self._c.ldap.member_group, self._c.ldap.groups_dn)
         return members_dn
 
     def grant_membership(self):
         change = (
             (ldap.MOD_ADD, 'memberUid', (self.nickname,)),
         )
+        log.info("Granting membership of %s to %s", self._members_dn(), self.nickname)
+        log.debug("Change: %s", change)
         self._conn.modify_s(self._members_dn(), change)
+        log.debug("Granted.")
 
     def revoke_membership(self):
         change = (
             (ldap.MOD_DELETE, 'memberUid', (self.nickname,)),
         )
+        log.info("Revoking membership of %s to %s", self._members_dn(), self.nickname)
+        log.debug("Change: %s", change)
         self._conn.modify_s(self._members_dn(), change)
+        log.debug("Revoked.")
 
     @property
     def nickname(self):

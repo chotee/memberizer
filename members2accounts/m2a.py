@@ -59,7 +59,6 @@ class Members2Accounts():
         members.decrypt_and_verify() # Check that the member change document is trustable.
 
         report = ChangeReporter() # Object that receives the changes for reporting it.
-        accounts.publish_changes_to(report)
 
         accounts_not_current_members = self.add_or_update_accounts(accounts, members)
 

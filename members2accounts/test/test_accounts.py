@@ -14,6 +14,30 @@ from members2accounts.exc import *
 @pytest.fixture
 def fake_accounts(monkeypatch):
     mock_ldap_conn = MockLDAP()
+
+    people = {
+        'existing':
+            ('cn=existing,ou=people,dc=techinc,dc=nl',
+             {
+                'objectClass': ['inetOrgPerson', 'posixAccount', 'top'],
+                'cn': ['existing'], 'sn': ['existing'], 'uid': ['existing'],
+                'homeDirectory': ['/home/existing'],
+                'mail': ['existing@techinc.nl'],
+                'telexNumber': ['2013-12-01'],
+                'uidNumber': ['501'], 'gidNumber': ['500'],
+             }),
+        'anotherMember':
+            ('cn=anotherMember,ou=people,dc=techinc,dc=nl',
+             {
+                'objectClass': ['inetOrgPerson', 'posixAccount', 'top'],
+                'cn': ['anotherMember'], 'sn': ['anotherMember'], 'uid': ['anotherMember'],
+                'homeDirectory': ['/home/anotherMember'],
+                'mail': ['anotherMember@techinc.nl'],
+                'telexNumber': ['2013-12-15'],
+                'uidNumber': ['502'], 'gidNumber': ['501'],
+             })
+    }
+
     a = Accounts(mock_ldap_conn)
     a._conn.set_return_value('search_s',
         #(base, scope, filterstr, attrlist, attrsonly),
@@ -28,16 +52,15 @@ def fake_accounts(monkeypatch):
         ('ou=people,dc=techinc,dc=nl', ldap.SCOPE_ONELEVEL, '(&(mail=existing@techinc.nl)(objectClass=inetOrgPerson))',
          None, 0),
         [
-            ('cn=existing,ou=people,dc=techinc,dc=nl',
-             {
-                'objectClass': ['inetOrgPerson', 'posixAccount', 'top'],
-                'cn': ['existing'], 'sn': ['existing'], 'uid': ['existing'],
-                'homeDirectory': ['/home/existing'],
-                'mail': ['existing@techinc.nl'],
-                'telexNumber': ['2013-12-01'],
-                'uidNumber': ['501'], 'gidNumber': ['500'],
-             })
+            people['existing']
         ]
+    )
+    a._conn.set_return_value('search_s',
+       ('ou=people,dc=techinc,dc=nl', ldap.SCOPE_ONELEVEL, '(|(cn=existing),(cn=anotherMember))', None, 0),
+       [
+           people['existing'],
+           people['anotherMember']
+       ]
     )
     a._conn.set_return_value('search_s',
         ('ou=people,dc=techinc,dc=nl', ldap.SCOPE_ONELEVEL, '(&(objectClass=inetOrgPerson)(cn=testcreate))',
@@ -62,10 +85,21 @@ def fake_accounts(monkeypatch):
         ]
     )
     a._conn.set_return_value('search_s',
+       ('ou=groups,dc=techinc,dc=nl', ldap.SCOPE_ONELEVEL, '(cn=members)', None, 0),
+       [
+           ('cn=members,ou=groups,dc=techinc,dc=nl',
+            {'cn': ['members'],
+             'gidNumber': ['700'],
+             'memberUid': ['existing', 'anotherMember'],
+             'objectClass': ['posixGroup', 'top']
+            }
+           )
+       ]
+    )
+    a._conn.set_return_value('search_s',
         ('ou=groups,dc=techinc,dc=nl', ldap.SCOPE_ONELEVEL, '(memberUid=afakeaccount)', None, 0),
         []
     )
-
 
     return a
 
@@ -147,6 +181,13 @@ class TestAccounts(object):
     def test_verify_connection(self, fake_accounts):
         a = fake_accounts
         a.verify_connection()
+
+    def test_get_all_member_accounts(self, fake_accounts):
+        a = fake_accounts
+        res = a.get_all_member_accounts()
+        assert 2 == len(res)
+        assert 'existing' == res[0].nickname
+
 #    def test_create_user(self):
 
     # def test_fetch(self, fake_accounts):
