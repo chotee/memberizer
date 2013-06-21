@@ -20,7 +20,7 @@ def Set_GPG_Test_Fingerprints():
     Config_reset()
     data = deepcopy(Defaults)
     data['gpg']['my_id'] = '7C7F 7435 140C E92E BB33  6CF7 8367 1848 9BB7 D7C7' # Fingerprint of the key that the automation uses to decrypt and sign
-    data['gpg']['allowed_ids'] = [
+    data['gpg']['signer_ids'] = [
             '8044 9D3E 6EAC E4D9 C4D2  A5D7 6752 C3BC 94DA 7C30',
         ] # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
     Config(custom_data=data)
@@ -63,7 +63,7 @@ class TestMembers(object):
         pytest.raises(KeyNotTrustedException, m.decrypt_and_verify, fixture_file('test_keyring_not_trusted'))
 
     def test_decrypt_and_verify_not_allowed(self, monkeypatch):
-        monkeypatch.setattr(Config().gpg, 'allowed_ids', [])
+        monkeypatch.setattr(Config().gpg, 'signer_ids', [])
         m = Members(fixture_file('test_members.json.gpg'))
         pytest.raises(SignerIsNotAllowedException, m.decrypt_and_verify, fixture_file('test_keyring'))
 

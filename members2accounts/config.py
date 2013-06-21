@@ -64,9 +64,9 @@ def _sanitize_settings(data):
         return fpr.replace(' ', '')
     data['gpg']['my_id'] = canonical_fingerprint(data['gpg']['my_id'])
     ids = []
-    for id in data['gpg']['allowed_ids']:
+    for id in data['gpg']['signer_ids']:
         ids.append(canonical_fingerprint(id))
-    data['gpg']['allowed_ids'] = ids
+    data['gpg']['signer_ids'] = ids
 
 
 
@@ -126,7 +126,7 @@ Defaults = {
     'gpg': { # GPG elements.
         'keyring': None, # directory with the GPG keyring. None will give the default location for the user.
         'my_id': 'FINGERPRINT OF UPDATE PROCESS', # Fingerprint of the key that the automation uses to decrypt and sign
-        'allowed_ids' : [
+        'signer_ids' : [
             'FINGERPRINTS THAT SIGN UPDATES',
         ], # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
     },

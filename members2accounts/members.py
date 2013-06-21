@@ -1,6 +1,8 @@
-
 import json
 import gnupg
+import logging
+log = logging.getLogger(__name__)
+
 from config import Config
 from exc import DecryptionFailedException, UnknownSignatureException, \
     KeyNotTrustedException, SignerIsNotAllowedException, SecretKeyNotInKeyringException
@@ -17,6 +19,7 @@ class Members(object):
     def _make_gpg_instance(self, keyring):
         if keyring is None:
             keyring = self._c.gpg.keyring
+        log.info("Using GnuPG keyring %s", keyring)
         gpg = gnupg.GPG(gnupghome=keyring)
         return gpg
 
@@ -25,7 +28,7 @@ class Members(object):
         for key in gpg.list_keys(secret=True): # iter over the secret keys avialable in the ring
             if key['fingerprint'] == self._c.gpg.my_id:
                 return
-        raise SecretKeyNotInKeyringException()
+        raise SecretKeyNotInKeyringException("In keyring '%s' No key found with fingerprint '%s'" % (gpg.gnupghome, self._c.gpg.my_id))
 
     def decrypt_and_verify(self, keyring=None):
         """I use GPG to decrypt the file and verify that it is to be trusted."""
@@ -38,15 +41,15 @@ class Members(object):
         if not dec_data.valid:
             raise UnknownSignatureException("Signed with unknown ID: %s" % dec_data.key_id)
         if dec_data.trust_level < dec_data.TRUST_FULLY:
-            raise KeyNotTrustedException("Key %s [%s] is in the keyring, but not trusted" % (dec_data.username,
-                                                                                                dec_data.pubkey_fingerprint[-8:]))
+            raise KeyNotTrustedException("Document is singed by %s (%s). This key is in the keyring, but not trusted." % (dec_data.pubkey_fingerprint, dec_data.username))
         ### Okay, it's a validly signed file. Now lets see if this signer is allowed to update member data.
         if not self._is_allowed(dec_data):
-            raise SignerIsNotAllowedException("Key %s [%s] is trusted, but not allowed to update member data" % (dec_data.username, dec_data.pubkey_fingerprint[-8:]))
+            raise SignerIsNotAllowedException("Document is singed by %s (%s). However this key is not allowed to update member data. Check the gpg.signer_ids setting." % (
+                dec_data.pubkey_fingerprint, dec_data.username))
         return True
 
     def _is_allowed(self, dec_data):
-        for fpr in Config().gpg.allowed_ids:
+        for fpr in Config().gpg.signer_ids:
             canonical_fpr = fpr.replace(' ', '')
             if canonical_fpr == dec_data.pubkey_fingerprint:
                 return True
