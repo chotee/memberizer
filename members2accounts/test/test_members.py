@@ -39,6 +39,9 @@ class TestMembers(object):
         '''I test what happens when a file is not the expected keyring directory'''
         m = Members()
         pytest.raises(SecretKeyNotInKeyringException, m.check_sanity, str(tmpdir))
+        pytest.raises(CryptoException, m.check_sanity, str(tmpdir.join("does_not_exist")))
+        str(tmpdir.join("some_file.txt").open('a').close())
+        pytest.raises(CryptoException, m.check_sanity, str(tmpdir.join("does_not_exist")))
 
     def test_load_member_data_missing_file(self):
         pytest.raises(IOError, Members, 'does-not-exist')

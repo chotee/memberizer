@@ -5,8 +5,7 @@ from ldap.filter import filter_format
 import datetime
 
 import logging
-
-log = logging.getLogger(__name__)
+log = logging.getLogger("m2a."+__name__)
 
 from config import Config
 from exc import AccountDoesNotExistException, MultipleResultsException, OperationNotSupported
@@ -24,7 +23,7 @@ class Accounts(object):
             self._conn = ldap_conn
         else:
             self._conn = ldap.initialize(self._c.uri)
-        log.info("Connecting to %s %s as %s", self._c.uri, self._c.base_dn, self._c.user)
+        log.info("Trying LDAP '%s' (base: '%s') as '%s'", self._c.uri, self._c.base_dn, self._c.user)
         try:
             self._conn.simple_bind_s(self._c.user, self._c.passwd)
         except ldap.SERVER_DOWN:
@@ -36,7 +35,7 @@ class Accounts(object):
         except ldap.INVALID_CREDENTIALS:
             log.fatal("Username or password incorrect for %s user %s", self._c.uri, self._c.user)
             sys.exit(1)
-        log.info("connected!")
+        log.info("Connected to LDAP!")
 
     def verify_connection(self):
         self._conn.search_s(self._c.people_dn,ldap.SCOPE_BASE)

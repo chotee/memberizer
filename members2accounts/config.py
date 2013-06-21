@@ -5,7 +5,7 @@ import argparse
 from ast import literal_eval
 
 import logging
-log = logging.getLogger(__name__)
+log = logging.getLogger('m2a.'+__name__)
 
 _CONFIG_INST = None
 def Config(**kwargs):
@@ -20,9 +20,12 @@ def Config_reset():
 
 def _config_read_json_file(data, res):
     fd = open(res.config_file, 'rb')
+    log.info("Reading from configuration file %s", res.config_file)
     config_file_settings = json.load(fd)
     for section_name, section_items in config_file_settings.iteritems():
         data.setdefault(section_name, {}).update(section_items)
+    log.debug("Finished config file read.")
+
 
 def _config_cmdline_options(data):
     parser = argparse.ArgumentParser(
@@ -53,9 +56,11 @@ def _config_handle_cmdline_options(data, res):
 
 def _config_write_file(data, res):
     fd = open(res.write_config, 'wb')
+    log.info("Writing configuration to %s", res.write_config)
     json.dump(data, fd,
               sort_keys=True, indent=4, separators=(',', ': '))
     fd.close()
+    log.debug("Done.")
     sys.exit()
 
 
@@ -67,9 +72,6 @@ def _sanitize_settings(data):
     for id in data['gpg']['signer_ids']:
         ids.append(canonical_fingerprint(id))
     data['gpg']['signer_ids'] = ids
-
-
-
 
 def Config_set(cmd_line=None, custom_data=None):
     if not custom_data:

@@ -1,9 +1,17 @@
 import sys
 import logging
 
-logging.basicConfig()
-log = logging.getLogger(__name__)
+#logging.basicConfig()
+log = logging.getLogger('m2a')
 log.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+#ch.setLevel(logging.DEBUG)
+# create formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+# add formatter to ch
+ch.setFormatter(formatter)
+# add ch to logger
+log.addHandler(ch)
 
 from accounts import Accounts, Account
 from members import  Members
