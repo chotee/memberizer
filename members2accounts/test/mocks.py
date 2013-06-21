@@ -39,6 +39,7 @@ class Mock_Account():
         pass
 
 class Mock_Members():
+    def check_sanity(self): pass
     def decrypt_and_verify(self): pass
     def list_members(self):
         return [

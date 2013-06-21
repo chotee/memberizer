@@ -47,6 +47,7 @@ class Members2Accounts():
         accounts.connect()
         accounts.verify_connection() # Pre-flight test of member database
 
+        members.check_sanity()
         members.decrypt_and_verify() # Check that the member change document is trustable.
 
         report = ChangeReporter() # Object that receives the changes for reporting it.

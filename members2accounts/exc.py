@@ -20,6 +20,9 @@ class SignerIsNotAllowedException(CryptoException):
     """I get raised when the signed is not one of the allowed changers of the code."""
     pass
 
+class SecretKeyNotInKeyringException(CryptoException):
+    """I get called when trying to define a fingerprint as the key for this process, but there is no secret key available."""
+    pass
 
 class AccountDoesNotExistException(RuntimeError): pass
 class MultipleResultsException(RuntimeError): pass

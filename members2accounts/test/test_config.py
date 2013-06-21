@@ -24,6 +24,12 @@ class Test_SetConfig(object):
         config = Config(cmd_line=cmd_line.split())
         assert "ldaps://ldap.example.com" == config.ldap.uri
 
+    def test_canonical_fingerprints(self, clean_config):
+        cmd_line = ["--gpg.my_id", '12 33 66 AA BB']
+        config = Config(cmd_line=cmd_line)
+        assert "123366AABB" == config.gpg.my_id
+
+
     def test_member_file(self, clean_config):
         cmd_line = 'members.json'
         config = Config(cmd_line=cmd_line.split())

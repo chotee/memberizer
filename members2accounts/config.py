@@ -52,12 +52,24 @@ def _config_handle_cmdline_options(data, res):
             data[section][option] = value
 
 def _config_write_file(data, res):
-    if res.write_config:
-        fd = open(res.write_config, 'wb')
-        json.dump(data, fd,
-                  sort_keys=True, indent=4, separators=(',', ': '))
-        fd.close()
-        sys.exit()
+    fd = open(res.write_config, 'wb')
+    json.dump(data, fd,
+              sort_keys=True, indent=4, separators=(',', ': '))
+    fd.close()
+    sys.exit()
+
+
+def _sanitize_settings(data):
+    def canonical_fingerprint(fpr):
+        return fpr.replace(' ', '')
+    data['gpg']['my_id'] = canonical_fingerprint(data['gpg']['my_id'])
+    ids = []
+    for id in data['gpg']['allowed_ids']:
+        ids.append(canonical_fingerprint(id))
+    data['gpg']['allowed_ids'] = ids
+
+
+
 
 def Config_set(cmd_line=None, custom_data=None):
     if not custom_data:
@@ -71,8 +83,10 @@ def Config_set(cmd_line=None, custom_data=None):
     if res.config_file:
         _config_read_json_file(data, res)
     _config_handle_cmdline_options(data, res)
-    _config_write_file(data, res)
+    if res.write_config:
+        _config_write_file(data, res)
     data['members_file'] = res.members_file
+    _sanitize_settings(data)
     return _config_section(data)
 
 def _config_section(settings):

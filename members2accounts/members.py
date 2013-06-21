@@ -3,7 +3,7 @@ import json
 import gnupg
 from config import Config
 from exc import DecryptionFailedException, UnknownSignatureException, \
-    KeyNotTrustedException, SignerIsNotAllowedException
+    KeyNotTrustedException, SignerIsNotAllowedException, SecretKeyNotInKeyringException
 
 class Members(object):
     """I represent all current members"""
@@ -12,17 +12,29 @@ class Members(object):
         self.member_fd = open(self.member_filename, 'rb') if member_filename is not None else None
         self.json_data = None
         self.member_data = None
+        self._c = Config()
+
+    def _make_gpg_instance(self, keyring):
+        if keyring is None:
+            keyring = self._c.gpg.keyring
+        gpg = gnupg.GPG(gnupghome=keyring)
+        return gpg
+
+    def check_sanity(self, keyring=None):
+        gpg = self._make_gpg_instance(keyring)
+        for key in gpg.list_keys(secret=True): # iter over the secret keys avialable in the ring
+            if key['fingerprint'] == self._c.gpg.my_id:
+                return
+        raise SecretKeyNotInKeyringException()
 
     def decrypt_and_verify(self, keyring=None):
         """I use GPG to decrypt the file and verify that it is to be trusted."""
-        if keyring is None:
-            keyring = Config().gpg.keyring
-        gpg = gnupg.GPG(gnupghome=keyring)
+        gpg = self._make_gpg_instance(keyring)
 
         assert self.member_fd is not None
         dec_data = gpg.decrypt_file(self.member_fd)
         if not dec_data.ok:
-            raise DecryptionFailedException("filename: %s" % self.member_filename)
+            raise DecryptionFailedException("Cannot decrypt file '%s'. Was it properly encrypted with key '%s'?" % (self.member_filename, self._c.gpg.my_id))
         if not dec_data.valid:
             raise UnknownSignatureException("Signed with unknown ID: %s" % dec_data.key_id)
         if dec_data.trust_level < dec_data.TRUST_FULLY:

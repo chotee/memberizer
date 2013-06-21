@@ -1,5 +1,6 @@
 __author__ = 'chotee'
 
+from copy import deepcopy
 import py
 import pytest
 
@@ -17,8 +18,8 @@ def fixture_stream(name):
 @pytest.fixture
 def Set_GPG_Test_Fingerprints():
     Config_reset()
-    data = Defaults.copy()
-    data['gpg']['my_id'] = '7C7F 7435 140C E92E BB33  6CF7 8367 1848 9BB7 D7C7', # Fingerprint of the key that the automation uses to decrypt and sign
+    data = deepcopy(Defaults)
+    data['gpg']['my_id'] = '7C7F 7435 140C E92E BB33  6CF7 8367 1848 9BB7 D7C7' # Fingerprint of the key that the automation uses to decrypt and sign
     data['gpg']['allowed_ids'] = [
             '8044 9D3E 6EAC E4D9 C4D2  A5D7 6752 C3BC 94DA 7C30',
         ] # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
@@ -29,6 +30,15 @@ class TestMembers(object):
     def test_load_member_data(self):
         m = Members()
         assert 3 == len(m.load_member_data(fixture_stream('test_members.json')))
+
+    def test_check_sanity(self):
+        m = Members()
+        m.check_sanity(fixture_file('test_keyring'))
+
+    def test_check_sanity_missing_keyring(self, tmpdir):
+        '''I test what happens when a file is not the expected keyring directory'''
+        m = Members()
+        pytest.raises(SecretKeyNotInKeyringException, m.check_sanity, str(tmpdir))
 
     def test_load_member_data_missing_file(self):
         pytest.raises(IOError, Members, 'does-not-exist')
