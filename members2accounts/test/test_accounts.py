@@ -68,6 +68,11 @@ def fake_accounts(monkeypatch):
         []
     )
     a._conn.set_return_value('search_s',
+        ('ou=people,dc=techinc,dc=nl', ldap.SCOPE_ONELEVEL, '(&(objectClass=inetOrgPerson)(cn=group_already_exists))',
+         None, 0),
+        []
+    )
+    a._conn.set_return_value('search_s',
         ('ou=people,dc=techinc,dc=nl', ldap.SCOPE_ONELEVEL, '(&(mail=doesnotexist@techinc.nl)(objectClass=inetOrgPerson))',
          None, 0),
         []
@@ -100,7 +105,15 @@ def fake_accounts(monkeypatch):
         ('ou=groups,dc=techinc,dc=nl', ldap.SCOPE_ONELEVEL, '(memberUid=afakeaccount)', None, 0),
         []
     )
-
+    a._conn.set_return_value('add_s',
+        ('cn=group_already_exists,ou=groups,dc=techinc,dc=nl',
+         (('cn', 'group_already_exists'),
+          ('memberUid', 'group_already_exists'),
+          ('gidNumber', '777'),
+          ('objectClass',
+           ('posixGroup', 'top')))),
+        ldap.ALREADY_EXISTS()
+    )
     return a
 
 @pytest.fixture
@@ -133,6 +146,13 @@ class TestAccount(object):
         account.save()
         assert account.in_ldap == True
         assert not account.is_dirty
+
+    def test_create_account_group_already_exists(self, fake_accounts):
+        accounts = fake_accounts
+        member = Mock_Member(nickname="group_already_exists", email="group_already_exists@techinc.nl", paid_until=date(2013, 8, 12))
+        account = accounts.new_account()
+        account.load_account_from_member(member)
+        account.save()
 
     def test_getter_and_setters(self, fake_accounts):
         accs = fake_accounts

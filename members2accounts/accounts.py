@@ -1,6 +1,6 @@
 import sys
 import ldap
-from ldap.filter import filter_format
+from ldap.filter import filter_format, escape_filter_chars
 
 import datetime
 
@@ -143,18 +143,22 @@ class Account(object):
 
     def _create_group(self, gid):
         """I create the group entry for the account in LDAP."""
-        group_dn = filter_format("cn=%s,%s", [self.nickname, self._c.ldap.groups_dn])
+        group_name = self.nickname.encode()
+        group_dn = filter_format("cn=%s,%s", [group_name, self._c.ldap.groups_dn])
 
         group_record = [
-            ('cn', self.nickname.encode()),
-            ('memberUid', self.nickname.encode()),
+            ('cn', group_name),
+            ('memberUid', group_name),
             ('gidNumber', str(gid)),
         ]
         group_record= [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in group_record]
         group_record.append(('objectClass', ['posixGroup', 'top']))
         log.info("Adding group %s", group_dn)
         log.debug("with attributes: %s", group_record)
-        self._conn.add_s(group_dn, group_record)
+        try:
+            self._conn.add_s(group_dn, group_record)
+        except ldap.ALREADY_EXISTS:
+            self.grant_membership()
         log.debug("Added.")
 
     def update(self):
@@ -174,26 +178,34 @@ class Account(object):
             # If you write a proper schema I'll get you a beer.
         )
 
-    def _members_dn(self):
-        members_dn = "cn=%s,%s" % (self._c.ldap.member_group, self._c.ldap.groups_dn)
-        return members_dn
+    def _group_dn(self, group_name):
+        dn = "cn=%s,%s" % (group_name, self._c.ldap.groups_dn)
+        return dn
 
     def grant_membership(self):
+        return self.add_to_group(self._c.ldap.member_group)
+
+    def revoke_membership(self):
+        self.remove_from_group(self._c.ldap.member_group)
+
+    def add_to_group(self, group_name):
+        group_dn = self._group_dn(group_name)
         change = (
             (ldap.MOD_ADD, 'memberUid', (self.nickname.encode(),)),
         )
-        log.info("Granting membership of %s to %s", self._members_dn(), self.nickname)
+        log.info("Granting membership of %s to %s", group_dn, self.nickname)
         log.debug("Change: %s", change)
-        self._conn.modify_s(self._members_dn(), change)
+        self._conn.modify_s(group_dn, change)
         log.debug("Granted.")
 
-    def revoke_membership(self):
+    def remove_from_group(self, group_name):
+        group_dn = self._group_dn(group_name)
         change = (
             (ldap.MOD_DELETE, 'memberUid', (self.nickname.encode(),)),
         )
-        log.info("Revoking membership of %s to %s", self._members_dn(), self.nickname)
+        log.info("Revoking membership of %s to %s", group_dn, self.nickname)
         log.debug("Change: %s", change)
-        self._conn.modify_s(self._members_dn(), change)
+        self._conn.modify_s(group_dn, change)
         log.debug("Revoked.")
 
     @property
