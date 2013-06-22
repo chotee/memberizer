@@ -58,13 +58,13 @@ class Members2Accounts():
         members.check_sanity()
         members.decrypt_and_verify() # Check that the member change document is trustable.
 
-        report = ChangeReporter() # Object that receives the changes for reporting it.
+#        report = ChangeReporter() # Object that receives the changes for reporting it.
 
         accounts_not_current_members = self.add_or_update_accounts(accounts, members)
 
         self.make_accounts_non_members(accounts, accounts_not_current_members)
 
-        PublishReport(report.generate_overview()) # Lets publish a report with the changes.
+#        PublishReport(report.generate_overview()) # Lets publish a report with the changes.
 
 if __name__ == "__main__":
     log.info("Starting")

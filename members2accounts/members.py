@@ -58,6 +58,7 @@ class Members(object):
         if not self._is_allowed(dec_data):
             raise SignerIsNotAllowedException("Document is singed by %s. However this key is not allowed to update member data. Check the gpg.signer_ids setting." % self._key_id(dec_data))
         log.warn("Member document valid! Encrypted and signed by %s", self._key_id(dec_data))
+        self.json_data = dec_data.data
         return True
 
     def _key_id(self, dec):
@@ -73,14 +74,16 @@ class Members(object):
     def list_members(self):
         """I return the list of all members."""
         if self.member_data is None:
-            self.member_data = self.load_member_data(json_data)
+            self.member_data = self.load_member_data(self.json_data)
+        log.info("The member file contained %d members.", len(self.member_data))
         return self.member_data
 
     def load_member_data(self, json_stream):
         """I read a json data-stream and return a list of member objects."""
-        data = json.load(json_stream)
+        log.debug("starting JSON load of member file.")
+        data = json.loads(json_stream, encoding='utf-8')
+        log.debug("Done.")
         return [Member(item) for item in data]
-
 
 class Member(dict):
     """I represent one member"""

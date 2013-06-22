@@ -13,7 +13,7 @@ def fixture_file(name):
     return unicode(py.path.local(__file__).join('..').join(name).realpath())
 
 def fixture_stream(name):
-    return open(fixture_file(name), 'rb')
+    return open(fixture_file(name), 'rb').read()
 
 @pytest.fixture
 def Set_GPG_Test_Fingerprints():
