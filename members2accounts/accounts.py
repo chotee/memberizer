@@ -142,6 +142,7 @@ class Account(object):
         """I create the group entry for the account in LDAP."""
         group_record = [
             ('cn', self.nickname.encode()),
+            ('memberUid', self.nickname.encode()),
             ('gidNumber', str(gid)),
         ]
         group_record= [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in group_record]
