@@ -46,7 +46,8 @@ class Accounts(object):
         """I return a list of Account objects for all member-accounts in LDAP"""
         member_group_filter = '(cn=%s)' % self._c.member_group
         member_cns = self._conn.search_s(self._c.groups_dn, ldap.SCOPE_ONELEVEL, member_group_filter)[0][1]['memberUid']
-        member_filter = "(|(cn=" + "),(cn=".join(member_cns) + '))'
+        member_filter = "(|(cn=" + ")(cn=".join(member_cns) + '))'
+        log.debug("base: %s Filter: %s", self._c.people_dn, member_filter)
         list_of_account_data = self._conn.search_s(self._c.people_dn, ldap.SCOPE_ONELEVEL, member_filter)
         list_of_accounts = []
         for account_data in list_of_account_data:
@@ -174,18 +175,18 @@ class Account(object):
 
     def grant_membership(self):
         change = (
-            (ldap.MOD_ADD, 'memberUid', (self.nickname,)),
+            (ldap.MOD_ADD, 'memberUid', (self.nickname.encode(),)),
         )
-        log.info("Granting membership of %s to %s", self._members_dn(), self.nickname.encode())
+        log.info("Granting membership of %s to %s", self._members_dn(), self.nickname)
         log.debug("Change: %s", change)
         self._conn.modify_s(self._members_dn(), change)
         log.debug("Granted.")
 
     def revoke_membership(self):
         change = (
-            (ldap.MOD_DELETE, 'memberUid', (self.nickname,)),
+            (ldap.MOD_DELETE, 'memberUid', (self.nickname.encode(),)),
         )
-        log.info("Revoking membership of %s to %s", self._members_dn(), self.nickname.encode())
+        log.info("Revoking membership of %s to %s", self._members_dn(), self.nickname)
         log.debug("Change: %s", change)
         self._conn.modify_s(self._members_dn(), change)
         log.debug("Revoked.")

@@ -56,7 +56,7 @@ def fake_accounts(monkeypatch):
         ]
     )
     a._conn.set_return_value('search_s',
-       ('ou=people,dc=techinc,dc=nl', ldap.SCOPE_ONELEVEL, '(|(cn=existing),(cn=anotherMember))', None, 0),
+       ('ou=people,dc=techinc,dc=nl', ldap.SCOPE_ONELEVEL, '(|(cn=existing)(cn=anotherMember))', None, 0),
        [
            people['existing'],
            people['anotherMember']
