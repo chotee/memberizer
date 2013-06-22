@@ -134,16 +134,17 @@ Defaults = {
     },
     'ldap': {
         # LDAP server access..
-        'uri': '',#'ldap://192.168.122.224',
-        'user': '',#'cn=root,dc=techinc,dc=nl',
-        'passwd': '',#'test',
+        'uri': '',#'ldap://192.168.122.224', # URL for the LDAP server.
+        'user': '',#'cn=root,dc=techinc,dc=nl', # User to use with the LDAP server to make the changes.
+        'passwd': '',#'test', # Password of the ldap user
         # LDAP Structure.
-        'base_dn': 'dc=techinc,dc=nl',
-        'people_dn': 'ou=people,dc=techinc,dc=nl', #
-        'groups_dn': 'ou=groups,dc=techinc,dc=nl',
-        'free_id_dn': 'cn=NextFreeUnixId,dc=techinc,dc=nl',
-        'member_group': 'members',
-        'home_base': '/home/' # base for the home directory. Will append the nickname to this.
-                              # These keys also have to be added to the keyring.
+        'base_dn': 'dc=techinc,dc=nl', # base DN for the LDAP tree.
+        'people_dn': 'ou=people,dc=techinc,dc=nl', # Where are people stored?
+        'groups_dn': 'ou=groups,dc=techinc,dc=nl', # Where are the groups stored.
+        'free_id_dn': 'cn=NextFreeUnixId,dc=techinc,dc=nl', # Where is the record that keeps track of given userids.
+        'member_group': 'members', # The name of the group that contain the members.
+        'default_group': 'everybody', # The name of a group that contains everybody (new members are added to this,
+                                      # but non-members are not removed. Use None for none.
+        'home_base': '/home/', # base for the home directory. Will append the nickname to this.
        },
 }

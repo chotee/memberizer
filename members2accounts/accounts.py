@@ -78,7 +78,8 @@ class Account(object):
         attributes = account_info[1]
         self.email = attributes['mail'][0]
         self.nickname = attributes['cn'][0]
-        self.paid_until = datetime.datetime.strptime(attributes.get('telexNumber', ['1970-01-01'])[0], "%Y-%m-%d").date()
+        if 'telexNumber' in attributes:
+            self.paid_until = datetime.datetime.strptime(attributes['telexNumber'][0], "%Y-%m-%d").date()
         self._dirty.clear()
 
     def load_from_ldap_by_nickname(self, nickname=None):
@@ -91,7 +92,10 @@ class Account(object):
         """I take a member object and create a proper Account object from it."""
         self.nickname = member.nickname
         self.email = member.email
-        self.paid_until = member.paid_until
+        try:
+            self.paid_until = member.paid_until
+        except AttributeError:
+            self.paid_until = None
 
     def _ldap_search_one(self, *args):
         """I do a LDAP search and make sure I only get one result and return only that one result."""
@@ -121,6 +125,8 @@ class Account(object):
         uid, gid = self._grab_unique_ids()
         self._create_account(gid, uid)
         self._create_group(gid)
+        if self._c.ldap.default_group:
+            self.add_to_group(self._c.ldap.default_group)
         self._dirty.clear()
 
     def _create_account(self, gid, uid):
@@ -156,11 +162,11 @@ class Account(object):
         log.debug("with attributes: %s", group_record)
         try:
             self._conn.add_s(group_dn, group_record)
+            log.debug("Added.")
         except ldap.ALREADY_EXISTS:
-            pass
+            log.warn("The group %s already exists!", group_dn)
         finally:
             self.add_to_group(group_name)
-        log.debug("Added.")
 
     def update(self):
         """I Assume a account has been previously created. For easy synchronisation use the save method."""
@@ -173,11 +179,15 @@ class Account(object):
 
     def _ldap_account_structure(self):
         '''I represent the parts of the LDAP structure that can be changed after '''
-        return (
+        a = [
             ('mail', self.email.encode()),
-            ('telexNumber', str(self.paid_until)) # Abuse, I know.
-            # If you write a proper schema I'll get you a beer.
-        )
+        ]
+        if self.paid_until:
+            a.append(
+                ('telexNumber', str(self.paid_until)) # Abuse, I know.
+                            # If you write a proper schema I'll get you a beer.
+            )
+        return a
 
     def _group_dn(self, group_name):
         dn = "cn=%s,%s" % (group_name, self._c.ldap.groups_dn)
@@ -194,17 +204,20 @@ class Account(object):
         change = (
             (ldap.MOD_ADD, 'memberUid', (self.nickname.encode(),)),
         )
-        log.info("Granting membership of %s to %s", group_dn, self.nickname)
+        log.info("Adding %s to group %s", self.nickname, group_dn)
         log.debug("Change: %s", change)
-        self._conn.modify_s(group_dn, change)
-        log.debug("Granted.")
+        try:
+            self._conn.modify_s(group_dn, change)
+            log.debug("Granted.")
+        except ldap.TYPE_OR_VALUE_EXISTS:
+            log.warn("Group %s already had a '%s' entry. Skipping", group_dn, self.nickname)
 
     def remove_from_group(self, group_name):
         group_dn = self._group_dn(group_name)
         change = (
             (ldap.MOD_DELETE, 'memberUid', (self.nickname.encode(),)),
         )
-        log.info("Revoking membership of %s to %s", group_dn, self.nickname)
+        log.info("Removing %s from group %s", self.nickname, group_dn)
         log.debug("Change: %s", change)
         self._conn.modify_s(group_dn, change)
         log.debug("Revoked.")

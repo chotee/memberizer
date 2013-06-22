@@ -207,7 +207,7 @@ class TestAccount(object):
             }
         )
         a.load_from_ldap_account_info(account_info)
-        assert date(1970,1,1) == a.paid_until
+        assert None == a.paid_until
 
 class TestAccounts(object):
     def test_verify_connection(self, fake_accounts):

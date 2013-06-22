@@ -1,0 +1,16 @@
+[
+    {
+        "nickname": "existing",
+        "email": "existing@techinc.nl",
+        "paid_until": "2014-06-20"
+    },
+    {
+        "nickname": "new",
+        "email": "new@techinc.nl",
+        "paid_until": "2014-07-01"
+    },
+    {
+        "nickname": "resident",
+        "email": "resident@hackerspace.net"
+    }
+]

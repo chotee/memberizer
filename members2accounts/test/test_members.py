@@ -31,6 +31,8 @@ class TestMembers(object):
         m = Members()
         assert 3 == len(m.load_member_data(fixture_stream('test_members.json')))
 
+        assert 3 == len(m.load_member_data(fixture_stream('test_members-2.json')))
+
     def test_check_sanity(self):
         m = Members()
         m.check_sanity(fixture_file('test_keyring'))
