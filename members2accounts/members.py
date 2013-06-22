@@ -57,7 +57,7 @@ class Members(object):
         ### Okay, it's a validly signed file. Now lets see if this signer is allowed to update member data.
         if not self._is_allowed(dec_data):
             raise SignerIsNotAllowedException("Document is singed by %s. However this key is not allowed to update member data. Check the gpg.signer_ids setting." % self._key_id(dec_data))
-        log.warn("Member document valid! Encrypted and signed by %s", self._key_id(dec_data))
+        log.info("Member document valid! Encrypted and signed by %s", self._key_id(dec_data))
         self.json_data = dec_data.data
         return True
 

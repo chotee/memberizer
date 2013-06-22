@@ -79,6 +79,7 @@ class Account(object):
         self.email = attributes['mail'][0]
         self.nickname = attributes['cn'][0]
         self.paid_until = datetime.datetime.strptime(attributes.get('telexNumber', ['1970-01-01'])[0], "%Y-%m-%d").date()
+        self._dirty.clear()
 
     def load_from_ldap_by_nickname(self, nickname=None):
         nickname = self.nickname if nickname is None else nickname
@@ -104,11 +105,13 @@ class Account(object):
     def save(self):
         """I save the current Account to LDAP. I update exiting accounts and create new ones."""
         if self._ldap_dn:
-            self.update()
+            if self.is_dirty:
+                self.update()
         else:
             try:
                 self.load_from_ldap_by_nickname()
-                self.update()
+                if self.is_dirty:
+                    self.update()
             except AccountDoesNotExistException:
                 self.create()
         self._dirty.clear()
@@ -140,6 +143,8 @@ class Account(object):
 
     def _create_group(self, gid):
         """I create the group entry for the account in LDAP."""
+        group_dn = filter_format("cn=%s,%s", [self.nickname, self._c.ldap.groups_dn])
+
         group_record = [
             ('cn', self.nickname.encode()),
             ('memberUid', self.nickname.encode()),
@@ -147,7 +152,6 @@ class Account(object):
         ]
         group_record= [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in group_record]
         group_record.append(('objectClass', ['posixGroup', 'top']))
-        group_dn = filter_format("cn=%s,%s", [self.nickname, self._c.ldap.groups_dn])
         log.info("Adding group %s", group_dn)
         log.debug("with attributes: %s", group_record)
         self._conn.add_s(group_dn, group_record)
@@ -157,7 +161,7 @@ class Account(object):
         """I Assume a account has been previously created. For easy synchronisation use the save method."""
         assert self._ldap_dn is not None
         mods = [(ldap.MOD_REPLACE, e[0], ldap.filter.escape_filter_chars(e[1])) for e in self._ldap_account_structure() ]
-        log.info("Changing %s", self.nickname)
+        log.info("Update account '%s', dirty attributes: %s", self.nickname, self._dirty)
         log.debug("Change: %s -> %s", self._ldap_dn, mods)
         self._conn.modify_s(self._ldap_dn, mods)
         log.debug("Changed.")
@@ -199,8 +203,9 @@ class Account(object):
     def nickname(self, value):
         if self._nickname != value and self._nickname is not None:
             raise OperationNotSupported("Nickname cannot be changed.")
-        self._nickname = value
-        self._dirty.add("nickname")
+        if self._nickname != value:
+            self._nickname = value
+            self._dirty.add("nickname")
         return self._nickname
 
     @property
@@ -208,8 +213,9 @@ class Account(object):
         return self._email
     @email.setter
     def email(self, value):
-        self._email= value
-        self._dirty.add("email")
+        if self._email != value:
+            self._email= value
+            self._dirty.add("email")
         return self._email
 
     @property
@@ -217,8 +223,9 @@ class Account(object):
         return self._paid_until
     @paid_until.setter
     def paid_until(self, value):
-        self._paid_until = value
-        self._dirty.add("paid_until")
+        if self._paid_until != value:
+            self._paid_until = value
+            self._dirty.add("paid_until")
         return self._paid_until
 
     @property
@@ -228,9 +235,9 @@ class Account(object):
 
     @property
     def is_dirty(self):
-        if not self._dirty:
-            return False
-        return True
+        if self._dirty:
+            return True
+        return False
 
     @property
     def is_member(self):
