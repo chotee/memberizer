@@ -148,7 +148,6 @@ class Account(object):
 
         group_record = [
             ('cn', group_name),
-            ('memberUid', group_name),
             ('gidNumber', str(gid)),
         ]
         group_record= [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in group_record]
@@ -158,7 +157,9 @@ class Account(object):
         try:
             self._conn.add_s(group_dn, group_record)
         except ldap.ALREADY_EXISTS:
-            self.grant_membership()
+            pass
+        finally:
+            self.add_to_group(group_name)
         log.debug("Added.")
 
     def update(self):
