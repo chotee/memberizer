@@ -177,6 +177,18 @@ class TestAccount(object):
         account.revoke_membership()
         assert account.is_member == False
 
+    def test_ldap_data_missing_paid_until(self, fake_accounts):
+        accounts = fake_accounts
+        a = accounts.new_account()
+        account_info = (
+            'cn=no_paid_until,ou=people,dc=techinc,dc=nl',
+            {'cn': 'no_paid_until',
+             'mail': 'no_paid@techinc.nl'
+            }
+        )
+        a.load_from_ldap_account_info(account_info)
+        assert date(1970,1,1) == a.paid_until
+
 class TestAccounts(object):
     def test_verify_connection(self, fake_accounts):
         a = fake_accounts
@@ -187,14 +199,3 @@ class TestAccounts(object):
         res = a.get_all_member_accounts()
         assert 2 == len(res)
         assert 'existing' == res[0].nickname
-
-#    def test_create_user(self):
-
-    # def test_fetch(self, fake_accounts):
-    #     a = fake_accounts
-    #     pytest.raises(AccountDoesNotExistException, a.fetch, "doesnotexist@techinc.nl")
-    #
-    #     account = a.fetch("existing@techinc.nl")
-    #     assert account.email == "existing@techinc.nl"
-    #     assert account.nickname == 'existing'
-    #     assert account.paid_until == date(2013, 12, 1)

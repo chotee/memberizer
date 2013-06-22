@@ -77,7 +77,7 @@ class Account(object):
         attributes = account_info[1]
         self.email = attributes['mail'][0]
         self.nickname = attributes['cn'][0]
-        self.paid_until = datetime.datetime.strptime(attributes['telexNumber'][0], "%Y-%m-%d").date()
+        self.paid_until = datetime.datetime.strptime(attributes.get('telexNumber', ['1970-01-01'])[0], "%Y-%m-%d").date()
 
     def load_from_ldap_by_nickname(self, nickname=None):
         nickname = self.nickname if nickname is None else nickname
