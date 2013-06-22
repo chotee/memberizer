@@ -26,7 +26,7 @@ class Members2Accounts():
         :param accounts: Access to the accounts (this is what we will be modifying)
         :param members: List of all the current members.
         """
-        pending_members =  set([a.nickname for a in accounts.get_all_member_accounts()]) # Get the nicknames of accounts that are already member.
+        pending_members =  dict([(a.nickname, a) for a in accounts.get_all_member_accounts()]) # Get the nicknames of accounts that are already member.
         for member in members.list_members(): # Loop over the members
             account = accounts.new_account()
             account.load_account_from_member(member)
@@ -34,7 +34,7 @@ class Members2Accounts():
             if not account.is_member:
                 account.grant_membership()
             if member.nickname in pending_members:
-                pending_members.remove(member.nickname)
+                pending_members.pop(member.nickname)
         return pending_members # this is a list of accounts that used to be members, but are not now.
 
     def make_accounts_non_members(self, accounts, accounts_not_current_members):
@@ -42,7 +42,7 @@ class Members2Accounts():
         :param accounts: Access to the accounts
         :param accounts_not_current_members: List of accounts that should nolonger be members.
         """
-        for member in accounts_not_current_members: # All the accounts that were not in the member list.
+        for member in accounts_not_current_members.itervalues(): # All the accounts that were not in the member list.
             account = accounts.new_account()
             account.load_account_from_member(member)
             account.revoke_membership() # Remove their membership attributes.
