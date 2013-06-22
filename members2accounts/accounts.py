@@ -125,13 +125,13 @@ class Account(object):
             ('cn', self.nickname),
             ('sn', self.nickname),
             ('uid', self.nickname),
-            ('homeDirectory', ''.join([self._c.ldap.home_base, self.nickname])),
+            ('homeDirectory', ''.join([self._c.ldap.home_base, self.nickname.encode()])),
             ('uidNumber', str(uid)),
             ('gidNumber', str(gid)),
         ]
         member_record.extend(self._ldap_account_structure())
-        member_record = [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in member_record]
-        member_record.append(('object_class', ['inetOrgPerson', 'posixAccount', 'top']))
+        member_record = [(item[0], ldap.filter.escape_filter_chars(item[1]).encode('utf-8')) for item in member_record]
+        member_record.append(('objectClass', ['inetOrgPerson', 'posixAccount', 'top']))
         log.info("Adding account %s", self._ldap_dn)
         log.debug("with attributes: %s", member_record)
         self._conn.add_s(self._ldap_dn, member_record)
@@ -140,11 +140,11 @@ class Account(object):
     def _create_group(self, gid):
         """I create the group entry for the account in LDAP."""
         group_record = [
-            ('cn', self.nickname),
+            ('cn', self.nickname.encode()),
             ('gidNumber', str(gid)),
         ]
         group_record= [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in group_record]
-        group_record.append(('object_class', ['inetOrgPerson', 'posixAccount', 'top']))
+        group_record.append(('objectClass', ['posixGroup', 'top']))
         group_dn = filter_format("cn=%s,%s", [self.nickname, self._c.ldap.groups_dn])
         log.info("Adding group %s", group_dn)
         log.debug("with attributes: %s", group_record)
@@ -163,7 +163,7 @@ class Account(object):
     def _ldap_account_structure(self):
         '''I represent the parts of the LDAP structure that can be changed after '''
         return (
-            ('mail', self.email),
+            ('mail', self.email.encode()),
             ('telexNumber', str(self.paid_until)) # Abuse, I know.
             # If you write a proper schema I'll get you a beer.
         )
@@ -176,7 +176,7 @@ class Account(object):
         change = (
             (ldap.MOD_ADD, 'memberUid', (self.nickname,)),
         )
-        log.info("Granting membership of %s to %s", self._members_dn(), self.nickname)
+        log.info("Granting membership of %s to %s", self._members_dn(), self.nickname.encode())
         log.debug("Change: %s", change)
         self._conn.modify_s(self._members_dn(), change)
         log.debug("Granted.")
@@ -185,7 +185,7 @@ class Account(object):
         change = (
             (ldap.MOD_DELETE, 'memberUid', (self.nickname,)),
         )
-        log.info("Revoking membership of %s to %s", self._members_dn(), self.nickname)
+        log.info("Revoking membership of %s to %s", self._members_dn(), self.nickname.encode())
         log.debug("Change: %s", change)
         self._conn.modify_s(self._members_dn(), change)
         log.debug("Revoked.")

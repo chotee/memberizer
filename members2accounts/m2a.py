@@ -31,7 +31,7 @@ class Members2Accounts():
             account = accounts.new_account()
             account.load_account_from_member(member)
             account.save()
-            if not account.is_member():
+            if not account.is_member:
                 account.grant_membership()
             if member.nickname in pending_members:
                 pending_members.remove(member.nickname)
@@ -70,5 +70,6 @@ if __name__ == "__main__":
     log.info("Starting")
     config = Config(cmd_line=sys.argv[1:])
     Config_sanity(config)
-    Members2Accounts().go(Accounts(), Members(config.members_file))
+    m2a = Members2Accounts()
+    m2a.go(Accounts(), Members(config.members_file))
     log.info("End.")
