@@ -1,2 +1,3 @@
 regexp:\.idea/
 regexp:\.pyc$
+regexp:.~$
