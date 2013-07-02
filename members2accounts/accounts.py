@@ -8,7 +8,7 @@ import logging
 log = logging.getLogger("m2a."+__name__)
 
 from config import Config
-from exc import AccountDoesNotExistException, MultipleResultsException, OperationNotSupported
+from exc import AccountDoesNotExistException, MultipleResultsException, OperationNotSupported, LDAPConnectionException
 
 class Accounts(object):
     def __init__(self, ldap_conn=None):
@@ -27,13 +27,13 @@ class Accounts(object):
             self._conn.simple_bind_s(self._c.user, self._c.passwd)
         except ldap.SERVER_DOWN:
             log.fatal("Could not log into %s as %s", self._c.uri, self._c.user)
-            sys.exit(1)
+            raise LDAPConnectionException()
         except ldap.INVALID_DN_SYNTAX:
             log.fatal("Invalid DN syntax: %s", self._c.user)
-            sys.exit(1)
+            raise LDAPConnectionException()
         except ldap.INVALID_CREDENTIALS:
             log.fatal("Username or password incorrect for %s user %s", self._c.uri, self._c.user)
-            sys.exit(1)
+            raise LDAPConnectionException()
         log.info("Connected to LDAP!")
 
     def verify_connection(self):

@@ -24,6 +24,13 @@ class SecretKeyNotInKeyringException(CryptoException):
     """I get called when trying to define a fingerprint as the key for this process, but there is no secret key available."""
     pass
 
-class AccountDoesNotExistException(RuntimeError): pass
-class MultipleResultsException(RuntimeError): pass
-class OperationNotSupported(RuntimeError): pass
+class LDAPException(RuntimeError):
+    """I form the base for all LDAP related exceptions."""
+
+class LDAPConnectionException(LDAPException):
+    """I Get raised when there are issues connecting to the LDAP."""
+    pass
+
+class AccountDoesNotExistException(LDAPException): pass
+class MultipleResultsException(LDAPException): pass
+class OperationNotSupported(LDAPException): pass

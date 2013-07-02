@@ -81,7 +81,10 @@ def main():
                 log.info("False alarm. Keeping watching")
                 continue
             log.info("Found file '%s'. Using it as member file.", member_file)
-            m2a.go(Accounts(), Members(unicode(member_file)))
+            try:
+                m2a.go(Accounts(), Members(unicode(member_file)))
+            except RuntimeError:
+                log.fatal("Got unhandled exception. Aborting processing")
     else:
         m2a.go(Accounts(), Members(config.members_file))
 
