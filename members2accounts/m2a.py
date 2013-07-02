@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-
 import sys
+import py
 import logging
 
 #logging.basicConfig()
@@ -17,8 +17,9 @@ log.addHandler(ch)
 
 from accounts import Accounts, Account
 from members import  Members
-from exc import CryptoException, AccountDoesNotExistException
-from reporting import ChangeReporter, PublishReport
+from watcher import directory_watcher
+#from exc import CryptoException, AccountDoesNotExistException
+#from reporting import ChangeReporter, PublishReport
 from config import Config, Config_sanity
 
 
@@ -68,10 +69,24 @@ class Members2Accounts():
 
 #        PublishReport(report.generate_overview()) # Lets publish a report with the changes.
 
-if __name__ == "__main__":
-    log.info("Starting")
+def main():
+    """I run the main program routine."""
     config = Config(cmd_line=sys.argv[1:])
     Config_sanity(config)
     m2a = Members2Accounts()
-    m2a.go(Accounts(), Members(config.members_file))
+    if config.run.dir_watch:
+        while 42:
+            member_file = directory_watcher(config.run.dir_watch) # This blocks until a file is changed.
+            if not member_file:
+                log.info("False alarm. Keeping watching")
+                continue
+            log.info("Found file '%s'. Using it as member file.", member_file)
+            m2a.go(Accounts(), Members(unicode(member_file)))
+    else:
+        m2a.go(Accounts(), Members(config.members_file))
+
+
+if __name__ == "__main__":
+    log.info("Starting")
+    main()
     log.info("End.")

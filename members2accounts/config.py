@@ -3,6 +3,7 @@ from copy import deepcopy
 import json
 import argparse
 from ast import literal_eval
+import py
 
 import logging
 log = logging.getLogger('m2a.'+__name__)
@@ -104,8 +105,15 @@ def fatal(*args):
     sys.exit(1)
 
 def Config_sanity(config):
-    if not config.members_file:
-        fatal("Missing members file.")
+    if config.run.dir_watch: # we are going to watch a directory
+        watch_dir = py.path.local(config.run.dir_watch)
+        if watch_dir.check() == False:
+            fatal("Directory '%s' does not exist", watch_dir)
+        if watch_dir.check(dir=1) == False:
+            fatal("'%s' is not a directory!", watch_dir)
+    else:
+        if not config.members_file:
+            fatal("Missing members file.")
     if not config.ldap.uri:
         fatal("Missing LDAP URI. Set --ldap.uri .")
     elif ":" not in config.ldap.uri:
@@ -125,6 +133,9 @@ class _Config(object):
             raise AttributeError(item)
 
 Defaults = {
+    'run': {
+        'dir_watch': None,
+    },
     'gpg': { # GPG elements.
         'keyring': None, # directory with the GPG keyring. None will give the default location for the user.
         'my_id': 'FINGERPRINT OF UPDATE PROCESS', # Fingerprint of the key that the automation uses to decrypt and sign
