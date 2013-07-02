@@ -14,7 +14,8 @@ Installation and deployment details
 1. Obtain the project from the respository.
 
 #. Create a GnuPG key pair specifically for this service. ``gpg --gen-key``. Do *not* give it a passphrase. Export the
-   new public key and give it to the generators of the member file. This is the key they will need to encrypt with.
+   new public key and give it to the generators of the member file. This is the key they will need to have the public key
+   of to encrypt.
 
 #. In the process-keyring import the public-keys of all people going to do the signing, make sure you verify the
    signer-keys and trust them in the process-keyring.
@@ -41,8 +42,7 @@ Installation and deployment details
 Example LDAP Schema
 -------------------
 
-This schema was inspired on the SpaceFED LDAP schema.
-
+This schema was inspired on the SpaceFED LDAP schema (https://spacefed.net/wiki/index.php/Howto/Spacenet/Setup_LDAP)
 
 
 Todo - Bugs - Limitations
@@ -62,7 +62,5 @@ Ideas for future developments
 #. Send out emails to members that have been created / granted member status.
 
 #. Send an email with the results of the update back to the signer of the member document.
-
-#. Either be called with file to process or watch directory for new documents.
 
 #. Use the password store provided by OS to store the LDAP and GnuPG keys.
