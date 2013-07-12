@@ -72,6 +72,7 @@ class Members2Accounts():
 
 def main():
     """I run the main program routine."""
+    log.info("Starting")
     config = Config(cmd_line=sys.argv[1:])
     Config_sanity(config)
     m2a = Members2Accounts()
@@ -91,9 +92,7 @@ def main():
 
     else:
         m2a.go(Accounts(), Members(config.members_file))
-
+    log.info("End.")
 
 if __name__ == "__main__":
-    log.info("Starting")
     main()
-    log.info("End.")
