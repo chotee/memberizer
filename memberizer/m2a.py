@@ -2,6 +2,7 @@
 import sys
 import py
 import logging
+import traceback
 
 #logging.basicConfig()
 log = logging.getLogger('m2a')
@@ -84,7 +85,10 @@ def main():
             try:
                 m2a.go(Accounts(), Members(unicode(member_file)))
             except RuntimeError:
-                log.fatal("Got unhandled exception. Aborting processing")
+                for tb in traceback.format_exception_only(sys.exc_type, sys.exc_value):
+                    log.fatal(tb)
+                log.fatal("Got fatal exception. Aborting processing")
+
     else:
         m2a.go(Accounts(), Members(config.members_file))
 
