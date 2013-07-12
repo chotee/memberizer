@@ -28,9 +28,7 @@ def _config_read_json_file(data, res):
     log.debug("Finished config file read.")
 
 
-def _config_cmdline_options(data):
-    parser = argparse.ArgumentParser(
-        description="I read a properly signed json file with memberdata and create the accounts in LDAP.")
+def _config_cmdline_options(parser, data):
     parser.add_argument('members_file', metavar="MEMBERS-FILE", help="The GPG signed members file JSON format", nargs="?")
     parser.add_argument('-C', '--config-file', metavar="FILE", help="The JSON configuration file to use")
     parser.add_argument('-W', '--write-config', metavar="FILE", help="Write current configuration to FILE")
@@ -39,7 +37,6 @@ def _config_cmdline_options(data):
             cmd_option_name = "--%s.%s" % (section_name, option_name)
             help_value = "default: %s" % option_value
             parser.add_argument(cmd_option_name, metavar=option_name.upper(), help=help_value)
-    return parser
 
 def _config_handle_cmdline_options(data, res):
     for cmd_name, cmd_value in vars(res).iteritems():
@@ -75,13 +72,16 @@ def _sanitize_settings(data):
     data['gpg']['signer_ids'] = ids
 
 def Config_set(cmd_line=None, custom_data=None):
+    """I create the configuration object."""
     if not custom_data:
         data = deepcopy(Defaults)
     else:
         data = custom_data
     if cmd_line is None:
          cmd_line = []
-    parser = _config_cmdline_options(data)
+    parser = argparse.ArgumentParser(
+        description="I read a properly signed json file with memberdata and create the accounts in LDAP.")
+    _config_cmdline_options(parser, data)
     res = parser.parse_args(args=cmd_line)
     if res.config_file:
         _config_read_json_file(data, res)
@@ -90,7 +90,9 @@ def Config_set(cmd_line=None, custom_data=None):
         _config_write_file(data, res)
     data['members_file'] = res.members_file
     _sanitize_settings(data)
-    return _config_section(data)
+    config = _config_section(data)
+    config.setHelp(parser.format_help())
+    return config
 
 def _config_section(settings):
     data = {}
@@ -100,11 +102,14 @@ def _config_section(settings):
         data[option_name] = option_value
     return _Config(data)
 
-def fatal(*args):
+def fatal(*args, **kwargs):
+    if kwargs.get('help') is not None:
+        log.info("Showing help: \n%s", kwargs['help'])
     log.fatal(*args)
     sys.exit(1)
 
 def Config_sanity(config):
+    """I Check that the configuration has minimal sanity."""
     if config.run.dir_watch: # we are going to watch a directory
         watch_dir = py.path.local(config.run.dir_watch)
         if watch_dir.check() == False:
@@ -113,7 +118,7 @@ def Config_sanity(config):
             fatal("'%s' is not a directory!", watch_dir)
     else:
         if not config.members_file:
-            fatal("Missing members file.")
+            fatal("Missing members file.", help=config.help)
     if not config.ldap.uri:
         fatal("Missing LDAP URI. Set --ldap.uri .")
     elif ":" not in config.ldap.uri:
@@ -125,12 +130,16 @@ def Config_sanity(config):
 class _Config(object):
     def __init__(self, data):
         self._data = data
+        self.help = "Help not set."
 
     def __getattr__(self, item):
         try:
             return self._data[item]
         except KeyError:
             raise AttributeError(item)
+
+    def setHelp(self, help_string):
+        self.help = help_string
 
 Defaults = {
     'run': {
