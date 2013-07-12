@@ -1,6 +1,6 @@
-================
-Members2Accounts
-================
+==========
+Memberizer
+==========
 
 Loading JSON Member file into LDAP as accounts.
 

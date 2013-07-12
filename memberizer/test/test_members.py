@@ -4,9 +4,9 @@ from copy import deepcopy
 import py
 import pytest
 
-from members2accounts.members import Members, Member
-from members2accounts.config import Config, Defaults, Config_reset
-from members2accounts.exc import *
+from memberizer.members import Members, Member
+from memberizer.config import Config, Defaults, Config_reset
+from memberizer.exc import *
 
 def fixture_file(name):
     """I return a string with the absolute path to a fixture file"""

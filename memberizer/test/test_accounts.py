@@ -3,13 +3,13 @@ __author__ = 'chotee'
 import pytest
 from datetime import date
 
-from members2accounts.accounts import Accounts, Account
+from memberizer.accounts import Accounts, Account
 
 import ldap
 from fakeldap import MockLDAP
 from mocks import Mock_Member
 
-from members2accounts.exc import *
+from memberizer.exc import *
 
 @pytest.fixture
 def fake_accounts(monkeypatch):

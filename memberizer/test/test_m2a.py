@@ -1,10 +1,10 @@
 __author__ = 'chotee'
 
-from members2accounts.m2a import Members2Accounts
-from members2accounts.test.mocks import *
+from memberizer.m2a import Members2Accounts
+from memberizer.test.mocks import *
 
-#from members2accounts.members import Member
-#from members2accounts.accounts import Account
+#from memberizer.members import Member
+#from memberizer.accounts import Account
 
 class Test_Member2Account(object):
     def test_init(self):

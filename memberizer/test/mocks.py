@@ -2,7 +2,7 @@ __author__ = 'chotee'
 
 from datetime import date
 
-from members2accounts.exc import AccountDoesNotExistException
+from memberizer.exc import AccountDoesNotExistException
 
 class Mock_Accounts():
     def connect(self): pass
