@@ -30,8 +30,8 @@ def _config_read_json_file(data, res):
 
 def _config_cmdline_options(parser, data):
     parser.add_argument('members_file', metavar="MEMBERS-FILE", help="The GPG signed members file JSON format", nargs="?")
-    parser.add_argument('-C', '--config-file', metavar="FILE", help="The JSON configuration file to use")
-    parser.add_argument('-W', '--write-config', metavar="FILE", help="Write current configuration to FILE")
+    parser.add_argument('-C', '--config-file', metavar="JSON-FILE", help="The JSON configuration file to use")
+    parser.add_argument('-W', '--write-config', metavar="JSON-FILE", help="Write current configuration to JSON FILE")
     for section_name, section_value in data.iteritems():
         for option_name, option_value in section_value.iteritems():
             cmd_option_name = "--%s.%s" % (section_name, option_name)
@@ -53,12 +53,15 @@ def _config_handle_cmdline_options(data, res):
             data[section][option] = value
 
 def _config_write_file(data, res):
-    fd = open(res.write_config, 'wb')
-    log.info("Writing configuration to %s", res.write_config)
-    json.dump(data, fd,
-              sort_keys=True, indent=4, separators=(',', ': '))
-    fd.close()
-    log.debug("Done.")
+    fref = py.path.local(res.write_config)
+    if fref.check() == True:
+        log.fatal("%s already exists. Refusing to overwrite!", fref)
+    else:
+        with fref.open('wb') as fd:
+            log.info("Writing configuration to %s", res.write_config)
+            json.dump(data, fd,
+                      sort_keys=True, indent=4, separators=(',', ': '))
+        log.debug("Done.")
     sys.exit()
 
 
