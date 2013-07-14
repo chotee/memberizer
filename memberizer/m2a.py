@@ -20,11 +20,14 @@ from accounts import Accounts, Account
 from members import  Members
 from watcher import directory_watcher
 #from exc import CryptoException, AccountDoesNotExistException
-#from reporting import ChangeReporter, PublishReport
+from reporting import ChangeReport
 from config import Config, Config_sanity
 
 
 class Members2Accounts():
+    def __init__(self):
+        self.reporting = None
+
     def add_or_update_accounts(self, accounts, members):
         """I create accounts for members. I return a list with any accounts that are no longer members.
         :param accounts: Access to the accounts (this is what we will be modifying)
@@ -56,19 +59,17 @@ class Members2Accounts():
         :param accounts: Access to the accounts (this is what we will be modifying)
         :param members: List of all the current members.
         """
+        accounts.set_reporting(self.reporting)
         accounts.connect()
         accounts.verify_connection() # Pre-flight test of member database
-
         members.check_sanity()
         members.decrypt_and_verify() # Check that the member change document is trustable.
 
-#        report = ChangeReporter() # Object that receives the changes for reporting it.
-
         accounts_not_current_members = self.add_or_update_accounts(accounts, members)
-
         self.make_accounts_non_members(accounts, accounts_not_current_members)
 
-#        PublishReport(report.generate_overview()) # Lets publish a report with the changes.
+        if self.reporting is not None:
+            self.reporting.publish() # Lets publish a report with the changes.
 
 def main():
     """I run the main program routine."""
@@ -76,6 +77,8 @@ def main():
     config = Config(cmd_line=sys.argv[1:])
     Config_sanity(config)
     m2a = Members2Accounts()
+    m2a.reporting = ChangeReport()
+    accounts = Accounts()
     if config.run.dir_watch:
         while 42:
             member_file = directory_watcher(config.run.dir_watch) # This blocks until a file is changed.
@@ -84,14 +87,14 @@ def main():
                 continue
             log.info("Found file '%s'. Using it as member file.", member_file)
             try:
-                m2a.go(Accounts(), Members(unicode(member_file)))
+                m2a.go(accounts, Members(unicode(member_file)))
             except RuntimeError:
                 for tb in traceback.format_exception_only(sys.exc_type, sys.exc_value):
                     log.fatal(tb)
                 log.fatal("Got fatal exception. Aborting processing")
 
     else:
-        m2a.go(Accounts(), Members(config.members_file))
+        m2a.go(accounts, Members(config.members_file))
     log.info("End.")
 
 if __name__ == "__main__":

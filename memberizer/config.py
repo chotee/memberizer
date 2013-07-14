@@ -8,6 +8,35 @@ import py
 import logging
 log = logging.getLogger('m2a.'+__name__)
 
+Defaults = {
+    'run': {
+        'dir_watch': None,
+        'send_report': True
+    },
+    'gpg': { # GPG elements.
+        'keyring': None, # directory with the GPG keyring. None will give the default location for the user.
+        'my_id': 'FINGERPRINT OF UPDATE PROCESS', # Fingerprint of the key that the automation uses to decrypt and sign
+        'signer_ids' : [
+            'FINGERPRINTS THAT SIGN UPDATES',
+        ], # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
+    },
+    'ldap': {
+        # LDAP server access..
+        'uri': '',#'ldap://192.168.122.224', # URL for the LDAP server.
+        'user': '',#'cn=root,dc=techinc,dc=nl', # User to use with the LDAP server to make the changes.
+        'passwd': '',#'test', # Password of the ldap user
+        # LDAP Structure.
+        'base_dn': 'dc=techinc,dc=nl', # base DN for the LDAP tree.
+        'people_dn': 'ou=people,dc=techinc,dc=nl', # Where are people stored?
+        'groups_dn': 'ou=groups,dc=techinc,dc=nl', # Where are the groups stored.
+        'free_id_dn': 'cn=NextFreeUnixId,dc=techinc,dc=nl', # Where is the record that keeps track of given userids.
+        'member_group': 'members', # The name of the group that contain the members.
+        'default_group': 'everybody', # The name of a group that contains everybody (new members are added to this,
+                                      # but non-members are not removed. Use None for none.
+        'home_base': '/home/', # base for the home directory. Will append the nickname to this.
+       },
+}
+
 _CONFIG_INST = None
 def Config(**kwargs):
     global _CONFIG_INST
@@ -143,31 +172,3 @@ class _Config(object):
 
     def setHelp(self, help_string):
         self.help = help_string
-
-Defaults = {
-    'run': {
-        'dir_watch': None,
-    },
-    'gpg': { # GPG elements.
-        'keyring': None, # directory with the GPG keyring. None will give the default location for the user.
-        'my_id': 'FINGERPRINT OF UPDATE PROCESS', # Fingerprint of the key that the automation uses to decrypt and sign
-        'signer_ids' : [
-            'FINGERPRINTS THAT SIGN UPDATES',
-        ], # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
-    },
-    'ldap': {
-        # LDAP server access..
-        'uri': '',#'ldap://192.168.122.224', # URL for the LDAP server.
-        'user': '',#'cn=root,dc=techinc,dc=nl', # User to use with the LDAP server to make the changes.
-        'passwd': '',#'test', # Password of the ldap user
-        # LDAP Structure.
-        'base_dn': 'dc=techinc,dc=nl', # base DN for the LDAP tree.
-        'people_dn': 'ou=people,dc=techinc,dc=nl', # Where are people stored?
-        'groups_dn': 'ou=groups,dc=techinc,dc=nl', # Where are the groups stored.
-        'free_id_dn': 'cn=NextFreeUnixId,dc=techinc,dc=nl', # Where is the record that keeps track of given userids.
-        'member_group': 'members', # The name of the group that contain the members.
-        'default_group': 'everybody', # The name of a group that contains everybody (new members are added to this,
-                                      # but non-members are not removed. Use None for none.
-        'home_base': '/home/', # base for the home directory. Will append the nickname to this.
-       },
-}

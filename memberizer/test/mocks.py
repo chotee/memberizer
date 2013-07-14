@@ -9,6 +9,7 @@ class Mock_Accounts():
     def verify_connection(self): pass
     def publish_changes_to(self, report): pass
     def get_all_member_accounts(self): return [Mock_Account("exists@member.nl"),]
+    def set_reporting(self, report): pass
     def new_account(self):
         return Mock_Account()
     # def fetch(self, member):

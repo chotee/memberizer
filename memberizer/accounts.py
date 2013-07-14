@@ -1,8 +1,7 @@
 import sys
+import datetime
 import ldap
 from ldap.filter import filter_format, escape_filter_chars
-
-import datetime
 
 import logging
 log = logging.getLogger("m2a."+__name__)
@@ -13,6 +12,7 @@ from exc import AccountDoesNotExistException, MultipleResultsException, Operatio
 class Accounts(object):
     def __init__(self, ldap_conn=None):
         self._c = Config().ldap
+        self._report = None
         if ldap_conn is not None:
             self.connect(ldap_conn)
 
@@ -40,7 +40,10 @@ class Accounts(object):
         self._conn.search_s(self._c.people_dn,ldap.SCOPE_BASE)
 
     def new_account(self):
-        return Account(self._conn)
+        return Account(self._conn, self._report)
+
+    def set_reporting(self, report):
+        self._report = report
 
     def get_all_member_accounts(self):
         """I return a list of Account objects for all member-accounts in LDAP"""
@@ -61,16 +64,27 @@ class Accounts(object):
         members_dn = "cn=%s,%s" % (self._c.member_group, self._c.groups_dn)
         return members_dn
 
-class Account(object):
-    def __init__(self, conn):
+
+class Account(object, ):
+    def __init__(self, conn, report=None):
         self._c = Config()
         self._conn = conn
+        self._report = report
         self._email = None
         self._nickname = None
         self._paid_until = None
         self._ldap_dn = None
         self._groups = None
         self._dirty = set()
+
+    def record_event(func):
+        def _record_event(*args, **kwargs):
+            self = args[0]
+            func(*args, **kwargs)
+            report = self._report
+            if report is not None:
+                report.add_event(func.__name__, self.nickname, args[1:])
+        return _record_event
 
     def load_from_ldap_account_info(self, account_info):
         """I take the results of a ldap entry and load the account object with the data."""
@@ -108,7 +122,7 @@ class Account(object):
 
     def save(self):
         """I save the current Account to LDAP. I update exiting accounts and create new ones."""
-        if self._ldap_dn:
+        if self.in_ldap:
             if self.is_dirty:
                 self.update()
         else:
@@ -120,6 +134,7 @@ class Account(object):
                 self.create()
         self._dirty.clear()
 
+    @record_event
     def create(self):
         self._ldap_dn = self._account_dn(self.nickname)
         uid, gid = self._grab_unique_ids()
@@ -168,6 +183,7 @@ class Account(object):
         finally:
             self.add_to_group(group_name)
 
+    @record_event
     def update(self):
         """I Assume a account has been previously created. For easy synchronisation use the save method."""
         assert self._ldap_dn is not None
@@ -199,6 +215,7 @@ class Account(object):
     def revoke_membership(self):
         self.remove_from_group(self._c.ldap.member_group)
 
+    @record_event
     def add_to_group(self, group_name):
         group_dn = self._group_dn(group_name)
         change = (
@@ -212,6 +229,7 @@ class Account(object):
         except ldap.TYPE_OR_VALUE_EXISTS:
             log.warn("Group %s already had a '%s' entry. Skipping", group_dn, self.nickname)
 
+    @record_event
     def remove_from_group(self, group_name):
         group_dn = self._group_dn(group_name)
         change = (
@@ -232,7 +250,6 @@ class Account(object):
         if self._nickname != value:
             self._nickname = value
             self._dirty.add("nickname")
-        return self._nickname
 
     @property
     def email(self):
@@ -242,7 +259,6 @@ class Account(object):
         if self._email != value:
             self._email= value
             self._dirty.add("email")
-        return self._email
 
     @property
     def paid_until(self):
@@ -252,7 +268,6 @@ class Account(object):
         if self._paid_until != value:
             self._paid_until = value
             self._dirty.add("paid_until")
-        return self._paid_until
 
     @property
     def in_ldap(self):
