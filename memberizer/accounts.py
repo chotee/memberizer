@@ -83,7 +83,7 @@ class Account(object, ):
             func(*args, **kwargs)
             report = self._report
             if report is not None:
-                report.add_event(func.__name__, self.nickname, args[1:])
+                report.add_event(self.nickname, func.__name__, args[1:])
         return _record_event
 
     def load_from_ldap_account_info(self, account_info):
