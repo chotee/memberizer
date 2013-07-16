@@ -7,8 +7,8 @@ log = logging.getLogger('m2a.' + __name__)
 import gnupg
 import py
 
-from config import Config
-from exc import *
+from memberizer.config import Config
+from memberizer.exc import *
 
 
 
@@ -51,6 +51,9 @@ class GpgCrypto(object):
             raise SignerIsNotAllowedException("Document is singed by %s. However this key is not allowed to update member data. Check the gpg.signer_ids setting." % self._key_id(dec_data))
         log.info("Member document valid! Encrypted and signed by %s", self._key_id(dec_data))
         return dec_data.data
+
+    def encrypt_and_sign(self):
+        pass
 
     def _key_id(self, dec):
         return "%s (%s)" % (dec.pubkey_fingerprint, dec.username)
