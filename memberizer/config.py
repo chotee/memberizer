@@ -14,6 +14,7 @@ Defaults = {
         'send_report': True
     },
     'gpg': { # GPG elements.
+        'gpg_binary': 'gpg',
         'keyring': None, # directory with the GPG keyring. None will give the default location for the user.
         'my_id': 'FINGERPRINT OF UPDATE PROCESS', # Fingerprint of the key that the automation uses to decrypt and sign
         'signer_ids' : [

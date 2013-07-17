@@ -23,7 +23,8 @@ class GpgCrypto(object):
                 raise CryptoException("Keyring '%s' is not a directory. Set gpg.keyring" % keyring)
         else:
             log.info("Using default GnuPG keyring")
-        self._gpg = gnupg.GPG(gnupghome=keyring)
+        gpgbinary = self._c.gpg.gpg_binary if self._c.gpg.gpg_binary else "gpg"
+        self._gpg = gnupg.GPG(gnupghome=keyring, gpgbinary=gpgbinary)
 
     def check_sanity(self, keyring=None):
         gpg_my_id = self._c.gpg.my_id
