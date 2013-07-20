@@ -49,20 +49,29 @@ class GpgCrypto(object):
         if not self._is_allowed(dec_data):
             raise SignerIsNotAllowedException("Document is singed by %s. However this key is not allowed to update member data. Check the gpg.signer_ids setting." % self._key_id(dec_data))
         log.info("Member document valid! Encrypted and signed by %s", self._key_id(dec_data))
-        signer_email = self._get_signer_email(dec_data)
-        return dec_data.data, signer_email
+        signer_fingerprint = dec_data.fingerprint
+        return dec_data.data, signer_fingerprint
 
     def encrypt_and_sign(self, message, receptor_fingerprint):
-        receptor_fingerprint = receptor_fingerprint.replace(' ', '')
-        signed_message = self._gpg.sign('foo').data
+        receptor_fingerprint = self._canonical_fingerprint(receptor_fingerprint)
+        signed_message = self._gpg.sign(message).data
         encrypted_message = self._gpg.encrypt(signed_message, [receptor_fingerprint])
         if encrypted_message.status != 'encryption ok':
             raise EncryptingFailedException("Cannot encrypt message with key '%s': '%s'." % (
                                             receptor_fingerprint, encrypted_message.status))
         return encrypted_message.data
 
-    def _get_signer_email(self, dec):
-        return re.search('<(.*)>', dec.username).groups()[0]
+    def email_from_fingerprint(self, fingerprint):
+        fingerprint = self._canonical_fingerprint(fingerprint)
+        try:
+            signer_key = filter(lambda k: k['fingerprint']==fingerprint, self._gpg.list_keys())[0]
+            signer_uid = signer_key['uids'][0]
+        except IndexError:
+            raise UnknownSignatureException("Cannot find email from fingerprint '%s'." % fingerprint)
+        return re.search('<(.*)>', signer_uid).groups()[0]
+
+    def _canonical_fingerprint(self, fingerprint):
+        return fingerprint.replace(' ', '')
 
     def _key_id(self, dec):
         return "%s (%s)" % (dec.pubkey_fingerprint, dec.username)

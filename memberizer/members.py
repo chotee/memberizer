@@ -15,12 +15,12 @@ class Members(object):
             open(self.member_filename, 'rb').close() # Just to provoke IOError on missing file.
         self.json_data = None
         self.member_data = None
+        self.signer_fingerprint = None
         self._c = Config()
         self._gpg = None
-        self._signer = None
 
     def decrypt_and_verify(self, keyring=None):
-        self.json_data, self.signer_email = GpgCrypto(keyring).decrypt_and_verify(self.member_filename)
+        self.json_data, self.signer_fingerprint = GpgCrypto(keyring).decrypt_and_verify(self.member_filename)
         return True
 
     def check_sanity(self, keyring=None):
@@ -39,6 +39,11 @@ class Members(object):
         data = json.loads(json_stream, encoding='utf-8')
         log.debug("Done.")
         return [Member(item) for item in data]
+
+    def signer_email(self, keyring=None):
+        if self.signer_fingerprint is None:
+            return None
+        return GpgCrypto.email_from_fingerprint(self.signer_fingerprint)
 
 class Member(dict):
     """I represent one member"""

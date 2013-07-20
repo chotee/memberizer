@@ -46,7 +46,7 @@ class TestGpgCrypto(object):
     def test_decrypt_and_verify(self):
         m = Members(fixture_file('test_members.json.gpg'))
         assert True == m.decrypt_and_verify(fixture_file('test_keyring'))
-        assert "chotee@openended.eu" == m.signer_email
+        assert "8A50260EBB0E2600DB367AEB15D393C7675E522F" == m.signer_fingerprint
 
     def test_decrypt_and_verify_non_gpg_file(self):
         m = Members(fixture_file('test_members.json'))
@@ -70,5 +70,10 @@ class TestGpgCrypto(object):
         g.check_sanity()
         message = g.encrypt_and_sign("Test", "8044 9D3E 6EAC E4D9 C4D2  A5D7 6752 C3BC 94DA 7C30")
         assert '' != message
-
         pytest.raises(EncryptingFailedException, g.encrypt_and_sign, "Test", "failed identity")
+
+    def test_email_from_fingerprint(self):
+        g = GpgCrypto(fixture_file('test_keyring'))
+        email = g.email_from_fingerprint("8044 9D3E 6EAC E4D9 C4D2  A5D7 6752 C3BC 94DA 7C30")
+        assert 'chotee@openended.eu' == email
+        pytest.raises(UnknownSignatureException, g.email_from_fingerprint, "fail")
