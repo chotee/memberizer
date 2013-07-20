@@ -4,7 +4,7 @@ from datetime import date
 
 from memberizer.exc import AccountDoesNotExistException
 
-class Mock_Accounts():
+class Mock_Accounts(object):
     def connect(self): pass
     def verify_connection(self): pass
     def publish_changes_to(self, report): pass
@@ -21,7 +21,7 @@ class Mock_Accounts():
     # def revoke_membership(self, member):
     #     pass
 
-class Mock_Account():
+class Mock_Account(object):
     def __init__(self, email=None):
         if email:
             self.email = email
@@ -39,7 +39,7 @@ class Mock_Account():
     def save(self):
         pass
 
-class Mock_Members():
+class Mock_Members(object):
     def check_sanity(self): pass
     def decrypt_and_verify(self): pass
     def list_members(self):
@@ -48,8 +48,13 @@ class Mock_Members():
             Mock_Member("new","new@member.nl", date(2013,6,4)),
         ]
 
-class Mock_Member():
+class Mock_Member(object):
     def __init__(self, nickname, email, paid_until):
         self.nickname = nickname
         self.email = email
         self.paid_until = paid_until
+
+class Mock_smtplib_SMTP(object):
+    def __init__(self, server): pass
+    def quit(self): pass
+    def sendmail(self, from_email, to_email, message): pass

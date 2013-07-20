@@ -73,7 +73,8 @@ class Members2Accounts():
         try:
             members = Members(unicode(member_file))
             self.memberize(accounts, members)
-            self.publish(reporting, members.signer_email)
+            if Config.run.email_report:
+                self.publish(reporting, members.signer_fingerprint)
 
         except RuntimeError:
             for tb in traceback.format_exception_only(sys.exc_type, sys.exc_value):

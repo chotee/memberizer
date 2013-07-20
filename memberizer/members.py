@@ -42,11 +42,6 @@ class Members(object):
         log.debug("Done.")
         return [Member(item) for item in data]
 
-    def signer_email(self, keyring=None):
-        if self.signer_fingerprint is None:
-            return None
-        return GpgCrypto(keyring).email_from_fingerprint(self.signer_fingerprint)
-
 class Member(dict):
     """I represent one member"""
     def __getattr__(self, item):

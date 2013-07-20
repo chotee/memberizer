@@ -11,7 +11,11 @@ log = logging.getLogger('m2a.'+__name__)
 Defaults = {
     'run': {
         'dir_watch': None,
-        'send_report': True
+    },
+    'report': {
+        'send': True,
+        'sender': 'memberizer@example.com',
+        'server': 'localhost'
     },
     'gpg': { # GPG elements.
         'gpg_binary': 'gpg',
