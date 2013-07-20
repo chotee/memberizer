@@ -19,8 +19,10 @@ class Members(object):
         self._c = Config()
         self._gpg = None
 
-    def decrypt_and_verify(self, keyring=None):
-        self.json_data, self.signer_fingerprint = GpgCrypto(keyring).decrypt_and_verify(self.member_filename)
+    def decrypt_and_verify(self, keyring=None, member_filename=None):
+        if member_filename is None:
+            member_filename = self.member_filename
+        self.json_data, self.signer_fingerprint = GpgCrypto(keyring).decrypt_and_verify(member_filename)
         return True
 
     def check_sanity(self, keyring=None):
@@ -43,7 +45,7 @@ class Members(object):
     def signer_email(self, keyring=None):
         if self.signer_fingerprint is None:
             return None
-        return GpgCrypto.email_from_fingerprint(self.signer_fingerprint)
+        return GpgCrypto(keyring).email_from_fingerprint(self.signer_fingerprint)
 
 class Member(dict):
     """I represent one member"""

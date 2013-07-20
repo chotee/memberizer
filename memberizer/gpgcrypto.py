@@ -63,8 +63,10 @@ class GpgCrypto(object):
 
     def email_from_fingerprint(self, fingerprint):
         fingerprint = self._canonical_fingerprint(fingerprint)
+        def key_filter(key):
+            return key['fingerprint'] == fingerprint
         try:
-            signer_key = filter(lambda k: k['fingerprint']==fingerprint, self._gpg.list_keys())[0]
+            signer_key = filter(key_filter, self._gpg.list_keys())[0]
             signer_uid = signer_key['uids'][0]
         except IndexError:
             raise UnknownSignatureException("Cannot find email from fingerprint '%s'." % fingerprint)

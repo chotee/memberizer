@@ -40,6 +40,11 @@ class TestMembers(object):
         m = Members()
         m.check_sanity(fixture_file('test_keyring'))
 
+    def test_decrypt_and_verify(self):
+        m = Members()
+        assert True == m.decrypt_and_verify(fixture_file('test_keyring'), member_filename=fixture_file('test_members.json.gpg'))
+        assert m.signer_fingerprint is not None
+
     def test_load_member_data_broken_json(self):
         pytest.raises(ValueError, Members().load_member_data, fixture_stream('test_members_broken.json'))
 
