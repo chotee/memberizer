@@ -10,8 +10,6 @@ import py
 from memberizer.config import Config
 from memberizer.exc import *
 
-
-
 class GpgCrypto(object):
     def __init__(self, keyring=None):
         self._c = Config()
@@ -47,15 +45,21 @@ class GpgCrypto(object):
             raise UnknownSignatureException("Signed with unknown ID: %s" % dec_data.key_id)
         if dec_data.trust_level < dec_data.TRUST_FULLY:
             raise KeyNotTrustedException("Document is singed by %s. This key is in the keyring, but not trusted." % self._key_id(dec_data))
-        ### Okay, it's a validly signed file. Now lets see if this signer is allowed to update member data.
+            ### Okay, it's a validly signed file. Now lets see if this signer is allowed to update member data.
         if not self._is_allowed(dec_data):
             raise SignerIsNotAllowedException("Document is singed by %s. However this key is not allowed to update member data. Check the gpg.signer_ids setting." % self._key_id(dec_data))
         log.info("Member document valid! Encrypted and signed by %s", self._key_id(dec_data))
         signer_email = self._get_signer_email(dec_data)
         return dec_data.data, signer_email
 
-    def encrypt_and_sign(self):
-        pass
+    def encrypt_and_sign(self, message, receptor_fingerprint):
+        receptor_fingerprint = receptor_fingerprint.replace(' ', '')
+        signed_message = self._gpg.sign('foo').data
+        encrypted_message = self._gpg.encrypt(signed_message, [receptor_fingerprint])
+        if encrypted_message.status != 'encryption ok':
+            raise EncryptingFailedException("Cannot encrypt message with key '%s': '%s'." % (
+                                            receptor_fingerprint, encrypted_message.status))
+        return encrypted_message.data
 
     def _get_signer_email(self, dec):
         return re.search('<(.*)>', dec.username).groups()[0]

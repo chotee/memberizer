@@ -24,6 +24,10 @@ class SecretKeyNotInKeyringException(CryptoException):
     """I get called when trying to define a fingerprint as the key for this process, but there is no secret key available."""
     pass
 
+class EncryptingFailedException(CryptoException):
+    """I get called when the encryption failed."""
+    pass
+
 class LDAPException(RuntimeError):
     """I form the base for all LDAP related exceptions."""
 

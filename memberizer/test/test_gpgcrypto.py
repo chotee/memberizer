@@ -7,7 +7,7 @@ import pytest
 from memberizer.config import Config, Defaults, Config_reset
 from memberizer.gpgcrypto import GpgCrypto
 from memberizer.exc import SecretKeyNotInKeyringException, CryptoException, DecryptionFailedException, \
-    UnknownSignatureException, KeyNotTrustedException, SignerIsNotAllowedException
+    UnknownSignatureException, KeyNotTrustedException, SignerIsNotAllowedException, EncryptingFailedException
 from memberizer.members import Members
 
 @pytest.fixture
@@ -65,5 +65,10 @@ class TestGpgCrypto(object):
         m = Members(fixture_file('test_members.json.gpg'))
         pytest.raises(SignerIsNotAllowedException, m.decrypt_and_verify, fixture_file('test_keyring'))
 
-#    def test_encrypt_and_sign(self, monkeypatch):
-#        assert False
+    def test_encrypt_and_sign(self):
+        g = GpgCrypto(fixture_file('test_keyring'))
+        g.check_sanity()
+        message = g.encrypt_and_sign("Test", "8044 9D3E 6EAC E4D9 C4D2  A5D7 6752 C3BC 94DA 7C30")
+        assert '' != message
+
+        pytest.raises(EncryptingFailedException, g.encrypt_and_sign, "Test", "failed identity")
