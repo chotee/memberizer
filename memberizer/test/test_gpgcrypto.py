@@ -46,6 +46,7 @@ class TestGpgCrypto(object):
     def test_decrypt_and_verify(self):
         m = Members(fixture_file('test_members.json.gpg'))
         assert True == m.decrypt_and_verify(fixture_file('test_keyring'))
+        assert "chotee@openended.eu" == m.signer_email
 
     def test_decrypt_and_verify_non_gpg_file(self):
         m = Members(fixture_file('test_members.json'))
@@ -63,3 +64,6 @@ class TestGpgCrypto(object):
         monkeypatch.setattr(Config().gpg, 'signer_ids', [])
         m = Members(fixture_file('test_members.json.gpg'))
         pytest.raises(SignerIsNotAllowedException, m.decrypt_and_verify, fixture_file('test_keyring'))
+
+#    def test_encrypt_and_sign(self, monkeypatch):
+#        assert False

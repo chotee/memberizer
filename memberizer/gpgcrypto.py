@@ -1,6 +1,6 @@
 __author__ = 'chotee'
 
-
+import re
 import logging
 log = logging.getLogger('m2a.' + __name__)
 
@@ -51,10 +51,14 @@ class GpgCrypto(object):
         if not self._is_allowed(dec_data):
             raise SignerIsNotAllowedException("Document is singed by %s. However this key is not allowed to update member data. Check the gpg.signer_ids setting." % self._key_id(dec_data))
         log.info("Member document valid! Encrypted and signed by %s", self._key_id(dec_data))
-        return dec_data.data
+        signer_email = self._get_signer_email(dec_data)
+        return dec_data.data, signer_email
 
     def encrypt_and_sign(self):
         pass
+
+    def _get_signer_email(self, dec):
+        return re.search('<(.*)>', dec.username).groups()[0]
 
     def _key_id(self, dec):
         return "%s (%s)" % (dec.pubkey_fingerprint, dec.username)

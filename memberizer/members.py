@@ -17,9 +17,10 @@ class Members(object):
         self.member_data = None
         self._c = Config()
         self._gpg = None
+        self._signer = None
 
     def decrypt_and_verify(self, keyring=None):
-        self.json_data = GpgCrypto(keyring).decrypt_and_verify(self.member_filename)
+        self.json_data, self.signer_email = GpgCrypto(keyring).decrypt_and_verify(self.member_filename)
         return True
 
     def check_sanity(self, keyring=None):
