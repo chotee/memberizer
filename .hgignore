@@ -1,3 +1,4 @@
 regexp:\.idea/
 regexp:\.pyc$
 regexp:.~$
+regexp:/random_seed$
