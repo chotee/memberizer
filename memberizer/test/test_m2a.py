@@ -14,7 +14,7 @@ class Test_Member2Account(object):
         mock_accounts = Mock_Accounts()
         mock_members = Mock_Members()
         m2a = Members2Accounts()
-        m2a.go(mock_accounts, mock_members)
+        m2a.memberize(mock_accounts, mock_members)
 
 #    def test_make_accounts_non_members():
 #        pass

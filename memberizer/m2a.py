@@ -25,9 +25,6 @@ from config import Config, Config_sanity
 
 
 class Members2Accounts():
-    def __init__(self):
-        self.reporting = None
-
     def add_or_update_accounts(self, accounts, members):
         """I create accounts for members. I return a list with any accounts that are no longer members.
         :param accounts: Access to the accounts (this is what we will be modifying)
@@ -54,12 +51,11 @@ class Members2Accounts():
             account.load_account_from_member(member)
             account.revoke_membership() # Remove their membership attributes.
 
-    def go(self, accounts, members):
+    def memberize(self, accounts, members):
         """I Run the main update routine.
         :param accounts: Access to the accounts (this is what we will be modifying)
         :param members: List of all the current members.
         """
-        accounts.set_reporting(self.reporting)
         accounts.connect()
         accounts.verify_connection() # Pre-flight test of member database
         members.check_sanity()
@@ -68,8 +64,21 @@ class Members2Accounts():
         accounts_not_current_members = self.add_or_update_accounts(accounts, members)
         self.make_accounts_non_members(accounts, accounts_not_current_members)
 
-        if self.reporting is not None:
-            self.reporting.publish() # Lets publish a report with the changes.
+    def publish(self, reporting):
+        ''' Let's publish a report with the changes.'''
+        if reporting is not None:
+            reporting.publish()
+
+    def go(self, accounts, reporting, member_file):
+        try:
+            members = Members(unicode(member_file))
+            self.memberize(accounts, members)
+            self.publish(reporting, members.signer_email)
+
+        except RuntimeError:
+            for tb in traceback.format_exception_only(sys.exc_type, sys.exc_value):
+                log.fatal(tb)
+            log.fatal("Got fatal exception. Aborting processing")
 
 def main():
     """I run the main program routine."""
@@ -77,24 +86,19 @@ def main():
     config = Config(cmd_line=sys.argv[1:])
     Config_sanity(config)
     m2a = Members2Accounts()
-    m2a.reporting = ChangeReport()
+    reporting = ChangeReport()
     accounts = Accounts()
+    accounts.set_reporting(reporting)
     if config.run.dir_watch:
         while 42:
-            member_file = directory_watcher(config.run.dir_watch) # This blocks until a file is changed.
-            if not member_file:
+            members_file = directory_watcher(config.run.dir_watch) # This blocks until a file is changed.
+            if not members_file:
                 log.info("False alarm. Keeping watching")
                 continue
-            log.info("Found file '%s'. Using it as member file.", member_file)
-            try:
-                m2a.go(accounts, Members(unicode(member_file)))
-            except RuntimeError:
-                for tb in traceback.format_exception_only(sys.exc_type, sys.exc_value):
-                    log.fatal(tb)
-                log.fatal("Got fatal exception. Aborting processing")
-
+            log.info("Found file '%s'. Using it as member file.", members_file)
+            m2a.go(accounts, reporting, members_file)
     else:
-        m2a.go(accounts, Members(config.members_file))
+        m2a.go(accounts, reporting, config.members_file)
     log.info("End.")
 
 if __name__ == "__main__":
