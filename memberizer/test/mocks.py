@@ -55,6 +55,6 @@ class Mock_Member(object):
         self.paid_until = paid_until
 
 class Mock_smtplib_SMTP(object):
-    def __init__(self, server): pass
+    def __init__(self, server, port=25): pass
     def quit(self): pass
     def sendmail(self, from_email, to_email, message): pass

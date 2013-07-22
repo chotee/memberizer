@@ -46,7 +46,7 @@ class TestGpgCrypto(object):
     def test_decrypt_and_verify(self):
         m = Members(fixture_file('test_members.json.gpg'))
         assert True == m.decrypt_and_verify(fixture_file('test_keyring'))
-        assert "8A50260EBB0E2600DB367AEB15D393C7675E522F" == m.signer_fingerprint
+        assert "80449D3E6EACE4D9C4D2A5D76752C3BC94DA7C30" == m.signer_fingerprint
 
     def test_decrypt_and_verify_non_gpg_file(self):
         m = Members(fixture_file('test_members.json'))

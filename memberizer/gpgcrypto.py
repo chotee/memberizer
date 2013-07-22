@@ -49,7 +49,7 @@ class GpgCrypto(object):
         if not self._is_allowed(dec_data):
             raise SignerIsNotAllowedException("Document is singed by %s. However this key is not allowed to update member data. Check the gpg.signer_ids setting." % self._key_id(dec_data))
         log.info("Member document valid! Encrypted and signed by %s", self._key_id(dec_data))
-        signer_fingerprint = dec_data.fingerprint
+        signer_fingerprint = dec_data.pubkey_fingerprint
         return dec_data.data, signer_fingerprint
 
     def encrypt_and_sign(self, message, receptor_fingerprint):

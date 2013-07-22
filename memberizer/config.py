@@ -15,7 +15,10 @@ Defaults = {
     'report': {
         'send': True,
         'sender': 'memberizer@example.com',
-        'server': 'localhost'
+        'smtp_host': 'localhost',
+        'smtp_port': 25,
+        'smtp_user': '',
+        'smtp_pass': ''
     },
     'gpg': { # GPG elements.
         'gpg_binary': 'gpg',

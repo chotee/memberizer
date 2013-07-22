@@ -64,17 +64,12 @@ class Members2Accounts():
         accounts_not_current_members = self.add_or_update_accounts(accounts, members)
         self.make_accounts_non_members(accounts, accounts_not_current_members)
 
-    def publish(self, reporting):
-        ''' Let's publish a report with the changes.'''
-        if reporting is not None:
-            reporting.publish()
-
     def go(self, accounts, reporting, member_file):
         try:
             members = Members(unicode(member_file))
             self.memberize(accounts, members)
-            if Config.run.email_report:
-                self.publish(reporting, members.signer_fingerprint)
+            if Config().report.send:
+                reporting.publish(members.signer_fingerprint)
 
         except RuntimeError:
             for tb in traceback.format_exception_only(sys.exc_type, sys.exc_value):
@@ -87,7 +82,7 @@ def main():
     config = Config(cmd_line=sys.argv[1:])
     Config_sanity(config)
     m2a = Members2Accounts()
-    reporting = ChangeReport()
+    reporting = ChangeReport(config.gpg.keyring)
     accounts = Accounts()
     accounts.set_reporting(reporting)
     if config.run.dir_watch:
