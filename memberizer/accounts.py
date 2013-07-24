@@ -48,7 +48,10 @@ class Accounts(object):
     def get_all_member_accounts(self):
         """I return a list of Account objects for all member-accounts in LDAP"""
         member_group_filter = '(cn=%s)' % self._c.member_group
-        member_cns = self._conn.search_s(self._c.groups_dn, ldap.SCOPE_ONELEVEL, member_group_filter)[0][1]['memberUid']
+        try:
+            member_cns = self._conn.search_s(self._c.groups_dn, ldap.SCOPE_ONELEVEL, member_group_filter)[0][1]['memberUid']
+        except KeyError:
+            return []
         member_filter = "(|(cn=" + ")(cn=".join(member_cns) + '))'
         log.debug("base: %s Filter: %s", self._c.people_dn, member_filter)
         list_of_account_data = self._conn.search_s(self._c.people_dn, ldap.SCOPE_ONELEVEL, member_filter)
