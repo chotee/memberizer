@@ -39,7 +39,6 @@ class ChangeReport(object):
         email_msg['Subject'] = "Member update report."
         email_msg['From'] = self._c.report.sender
         email_msg['To'] = receiver_email
-        import pdb; pdb.set_trace()
         s = smtplib.SMTP(self._c.report.smtp_host, int(self._c.report.smtp_port))
         if self._c.report.smtp_user:
             s.login(self._c.report.smtp_user, self._c.report.smtp_pass)
