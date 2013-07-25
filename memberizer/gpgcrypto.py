@@ -16,7 +16,7 @@ class GpgCrypto(object):
         if keyring is None:
             keyring = self._c.gpg.keyring
         if keyring:
-            log.info("Using GnuPG keyring %s", keyring)
+            log.debug("Using GnuPG keyring %s", keyring)
             if not py.path.local(keyring).check(dir=1):
                 raise CryptoException("Keyring '%s' is not a directory. Set gpg.keyring" % keyring)
         else:

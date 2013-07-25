@@ -10,7 +10,7 @@ log.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 #ch.setLevel(logging.DEBUG)
 # create formatter
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(asctime)s %(levelname)5s %(message)s @%(name)s')
 # add formatter to ch
 ch.setFormatter(formatter)
 # add ch to logger
@@ -89,9 +89,9 @@ def main():
         while 42:
             members_file = directory_watcher(config.run.dir_watch) # This blocks until a file is changed.
             if not members_file:
-                log.info("False alarm. Keeping watching")
+                log.debug("False alarm. Keeping watching")
                 continue
-            log.info("Found file '%s'. Using it as member file.", members_file)
+            log.info("Detected file '%s'.", members_file)
             m2a.go(accounts, reporting, members_file)
     else:
         m2a.go(accounts, reporting, config.members_file)

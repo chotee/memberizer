@@ -23,7 +23,7 @@ def find_changed_file(directory_name):
         return True
 
     fn = directory_name.listdir(fil=file_filter, sort=file_sorter)[0]
-    log.debug("Selected file is '%s'", fn)
+    log.info("Selected file is '%s'", fn)
     return fn
 
 def directory_watcher(dir_to_watch):
