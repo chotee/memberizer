@@ -53,9 +53,9 @@ class GpgCrypto(object):
         return dec_data.data, signer_fingerprint
 
     def encrypt_and_sign(self, message, receptor_fingerprint):
+        signer_fingerprint = self._canonical_fingerprint(self._c.gpg.my_id)
         receptor_fingerprint = self._canonical_fingerprint(receptor_fingerprint)
-        signed_message = self._gpg.sign(message).data
-        encrypted_message = self._gpg.encrypt(signed_message, [receptor_fingerprint])
+        encrypted_message = self._gpg.encrypt(message, [receptor_fingerprint], sign=signer_fingerprint)
         if encrypted_message.status != 'encryption ok':
             raise EncryptingFailedException("Cannot encrypt message with key '%s': '%s'." % (
                                             receptor_fingerprint, encrypted_message.status))

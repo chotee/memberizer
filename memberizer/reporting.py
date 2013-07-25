@@ -16,18 +16,22 @@ class ChangeReport(object):
     def add_event(self, name, nick, args):
         self.events.append([name, nick, args])
 
-    def publish(self, receiver_fingerprint):
+    def compose_message(self):
         message = []
-        message.append(self._report_row("Changes in this run:"))
-        for e in self.events:
-            message.append(self._report_row(e))
-        message.append(self._report_row("run report complete."))
+        message.append(self.report_row("Changes in this run:"))
+        for e_name, e_nick, e_args in self.events:
+            message.append(self.report_row("%s: '%s' %s", e_name, e_nick, e_args))
+        message.append(self.report_row("run report complete."))
         message = "\n".join(message)
+        return message
+
+    def publish(self, receiver_fingerprint):
+        message = self.compose_message()
         enc_message = self._gpg.encrypt_and_sign(message, receiver_fingerprint)
         receiver_email = self._gpg.email_from_fingerprint(receiver_fingerprint)
         self._send_email(enc_message, receiver_email)
 
-    def _report_row(self, *args):
+    def report_row(self, *args):
         if len(args) == 1:
             message = args[0]
         else:

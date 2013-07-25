@@ -23,3 +23,18 @@ class TestChangeReport(object):
         monkeypatch.setattr(smtplib, "SMTP", Mock_smtplib_SMTP)
         cr = ChangeReport(keyring=fixture_file('test_keyring'))
         cr.publish("80449D3E6EACE4D9C4D2A5D76752C3BC94DA7C30")
+
+    def test_report_row(self):
+        cr = ChangeReport()
+        assert "foo" == cr.report_row("foo")
+        assert "foo|bar" == cr.report_row("foo|%s", "bar")
+        assert "foo|bar#quux" == cr.report_row("foo|%s#%s", "bar", "quux")
+
+    def test_compose_message(self):
+        cr = ChangeReport()
+        assert "Changes in this run:\nrun report complete." == cr.compose_message()
+        cr.add_event("Name", "Nick", "Args")
+        assert "Changes in this run:\nName: 'Nick' Args\nrun report complete." == cr.compose_message()
+        cr = ChangeReport()
+        cr.add_event("Name", "Nick", ["Arg1", "Arg2"])
+        assert "Changes in this run:\nName: 'Nick' ['Arg1', 'Arg2']\nrun report complete." == cr.compose_message()
