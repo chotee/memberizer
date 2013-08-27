@@ -29,7 +29,7 @@ class ChangeReport(object):
         message = self.compose_message()
         if not isinstance(receiver_fingerprints, list):
             receiver_fingerprints = [receiver_fingerprints]
-        for fpr in receiver_fingerprints:
+        for fpr in list(set(receiver_fingerprints)):
             enc_message = self._gpg.encrypt_and_sign(message, fpr)
             receiver_email = self._gpg.email_from_fingerprint(fpr)
             self._send_email(enc_message, receiver_email)
