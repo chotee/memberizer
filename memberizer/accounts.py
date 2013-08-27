@@ -254,7 +254,7 @@ class Account(object, ):
     @nickname.setter
     def nickname(self, value):
         if self._nickname != value and self._nickname is not None:
-            raise OperationNotSupported("Nickname cannot be changed.")
+            raise OperationNotSupported("Nickname '%s' cannot be changed to '%s'" % (self._nickname, value))
         if self._nickname != value:
             self._nickname = value
             self._dirty.add("nickname")
