@@ -30,7 +30,6 @@ class TestMembers(object):
     def test_load_member_data(self):
         m = Members()
         assert 3 == len(m.load_member_data(fixture_stream('test_members.json')))
-
         assert 3 == len(m.load_member_data(fixture_stream('test_members-2.json')))
 
     def test_load_member_data_missing_file(self):
@@ -44,6 +43,11 @@ class TestMembers(object):
         m = Members()
         assert True == m.decrypt_and_verify(fixture_file('test_keyring'), member_filename=fixture_file('test_members.json.gpg'))
         assert m.signer_fingerprint is not None
+
+    def test_member_edgecases(self):
+        m = Members(fixture_file("test_members_edgecases.json"), encrypted=False)
+        members = m.list_members()
+        assert ['', 'madness', 'upcased', 'withspaces'] == sorted([m.nickname for m in members])
 
     def test_load_member_data_broken_json(self):
         pytest.raises(ValueError, Members().load_member_data, fixture_stream('test_members_broken.json'))
@@ -61,3 +65,13 @@ class TestMember(object):
             pass
         else:
             assert False, "Should have thrown"
+
+    def test_nickname_raw(self):
+        data = {
+            'nickname': 'Strange Nick!',
+            'email': 'test@somedomain.com',
+            'paid_until': '2012-03-12'
+        }
+        m = Member(data)
+        assert 'Strange Nick!' == m.nickname_raw
+        assert 'strangenick' == m.nickname

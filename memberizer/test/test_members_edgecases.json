@@ -1,0 +1,23 @@
+[
+    {
+        "nickname": "",
+        "email": "missing-nick@techinc.nl",
+        "paid_until": "2014-06-20"
+    },
+    {
+        "nickname": "UpCased",
+        "email": "upcased@techinc.nl",
+        "paid_until": "2014-06-20"
+    },
+    {
+        "nickname": "with spaces",
+        "email": "with-spaces@techinc.nl",
+        "paid_until": "2014-06-20"
+    },
+    {
+        "nickname": "!Madness µ#",
+        "email": "with-spaces@techinc.nl",
+        "paid_until": "2014-06-20"
+    }
+
+]

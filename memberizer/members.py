@@ -2,15 +2,15 @@ import json
 import logging
 log = logging.getLogger('m2a.' + __name__)
 
-#log.setLevel(logging.DEBUG)
-import py
+import re
 from config import Config
 from gpgcrypto import GpgCrypto
 
 class Members(object):
     """I represent all current members"""
-    def __init__(self, member_filename=None):
+    def __init__(self, member_filename=None, encrypted=True):
         self.member_filename = member_filename
+        self.encrypted = encrypted
         if self.member_filename is not None:
             open(self.member_filename, 'rb').close() # Just to provoke IOError on missing file.
         self.json_data = None
@@ -38,6 +38,8 @@ class Members(object):
     def load_member_data(self, json_stream):
         """I read a json data-stream and return a list of member objects."""
         log.debug("starting JSON load of member file.")
+        if json_stream is None and self.encrypted == False:
+            json_stream = open(self.member_filename, 'rb').read()
         data = json.loads(json_stream, encoding='utf-8')
         log.debug("Done.")
         return [Member(item) for item in data]
@@ -48,3 +50,14 @@ class Member(dict):
         if item not in self:
             raise AttributeError(item)
         return self[item]
+
+    @property
+    def nickname(self):
+        """I make sure the nicks are somewhat normal, stripping off all non alphanumeric chars and lowercasing."""
+        nick = self['nickname']
+        nick = re.sub('[^a-zA-Z0-9]', '',nick).lower()
+        return nick
+
+    @property
+    def nickname_raw(self):
+        return self['nickname']
