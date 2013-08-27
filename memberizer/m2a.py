@@ -18,6 +18,7 @@ log.addHandler(ch)
 
 from accounts import Accounts, Account
 from members import  Members
+from exc import MemberNotValidException
 from watcher import directory_watcher
 #from exc import CryptoException, AccountDoesNotExistException
 from reporting import ChangeReport
@@ -33,7 +34,11 @@ class Members2Accounts():
         pending_members =  dict([(a.nickname, a) for a in accounts.get_all_member_accounts()]) # Get the nicknames of accounts that are already member.
         for member in members.list_members(): # Loop over the members
             account = accounts.new_account()
-            account.load_account_from_member(member)
+            try:
+                account.load_account_from_member(member)
+            except MemberNotValidException as ex:
+                log.warning("invalid member received! '%s'", ex)
+                continue
             account.save()
             if not account.is_member:
                 account.grant_membership()

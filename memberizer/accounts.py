@@ -7,7 +7,8 @@ import logging
 log = logging.getLogger("m2a."+__name__)
 
 from config import Config
-from exc import AccountDoesNotExistException, MultipleResultsException, OperationNotSupported, LDAPConnectionException
+from exc import AccountDoesNotExistException, MultipleResultsException, OperationNotSupported, \
+    LDAPConnectionException, MemberNotValidException
 
 class Accounts(object):
     def __init__(self, ldap_conn=None):
@@ -109,6 +110,10 @@ class Account(object, ):
         """I take a member object and create a proper Account object from it."""
         self.nickname = member.nickname
         self.email = member.email
+        if self.nickname == '':
+            if self._report is not None:
+                self._report.add_event("", "load_account_from_member", ["Member has no nickname. Email: '%s'",  member.email])
+            raise MemberNotValidException("Member does not have a nickname! '%s'", member)
         try:
             self.paid_until = member.paid_until
         except AttributeError:

@@ -30,6 +30,7 @@ class EncryptingFailedException(CryptoException):
 
 class LDAPException(RuntimeError):
     """I form the base for all LDAP related exceptions."""
+    pass
 
 class LDAPConnectionException(LDAPException):
     """I Get raised when there are issues connecting to the LDAP."""
@@ -38,3 +39,11 @@ class LDAPConnectionException(LDAPException):
 class AccountDoesNotExistException(LDAPException): pass
 class MultipleResultsException(LDAPException): pass
 class OperationNotSupported(LDAPException): pass
+
+class MemberizerException(RuntimeError):
+    """I am the basis for exceptions that are specific for Memberizer"""
+    pass
+
+class MemberNotValidException(MemberizerException):
+    """The member entry doesn't have the minimal necessary structure to be usable."""
+    pass

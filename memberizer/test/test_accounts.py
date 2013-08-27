@@ -147,6 +147,12 @@ class TestAccount(object):
         assert account.in_ldap == True
         assert not account.is_dirty
 
+    def test_create_invalid_member(self, fake_accounts):
+        accounts = fake_accounts
+        account = accounts.new_account()
+        member_original = Mock_Member(nickname="", email="test@techinc.nl", paid_until=date(2013, 8, 12))
+        pytest.raises(MemberNotValidException, account.load_account_from_member, member_original)
+
     def test_create_account_group_already_exists(self, fake_accounts):
         accounts = fake_accounts
         member = Mock_Member(nickname="group_already_exists", email="group_already_exists@techinc.nl", paid_until=date(2013, 8, 12))
@@ -208,6 +214,7 @@ class TestAccount(object):
         )
         a.load_from_ldap_account_info(account_info)
         assert None == a.paid_until
+
 
 class TestAccounts(object):
     def test_verify_connection(self, fake_accounts):
