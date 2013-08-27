@@ -102,15 +102,26 @@ def _config_write_file(data, res):
         log.debug("Done.")
     sys.exit()
 
-
-def _sanitize_settings(data):
+def _fingerprint_list_settings(data, segment, name):
     def canonical_fingerprint(fpr):
         return fpr.replace(' ', '')
-    data['gpg']['my_id'] = canonical_fingerprint(data['gpg']['my_id'])
+    is_list = True
+    orig_values = data[segment][name]
+    if not isinstance(orig_values, list):
+        orig_values = [orig_values]
+        is_list = False
     ids = []
-    for id in data['gpg']['signer_ids']:
+    for id in orig_values:
         ids.append(canonical_fingerprint(id))
-    data['gpg']['signer_ids'] = ids
+    if is_list:
+        data[segment][name] = ids
+    else:
+        data[segment][name] = ids[0]
+
+def _sanitize_settings(data):
+    _fingerprint_list_settings(data, 'gpg', 'my_id')
+    _fingerprint_list_settings(data, 'gpg', 'signer_ids')
+    _fingerprint_list_settings(data, 'report', 'emerg_notifiers')
 
 def Config_set(cmd_line=None, custom_data=None):
     """I create the configuration object."""
