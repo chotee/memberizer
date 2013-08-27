@@ -25,11 +25,14 @@ class ChangeReport(object):
         message = "\n".join(message)
         return message
 
-    def publish(self, receiver_fingerprint):
+    def publish(self, receiver_fingerprints):
         message = self.compose_message()
-        enc_message = self._gpg.encrypt_and_sign(message, receiver_fingerprint)
-        receiver_email = self._gpg.email_from_fingerprint(receiver_fingerprint)
-        self._send_email(enc_message, receiver_email)
+        if not isinstance(receiver_fingerprints, list):
+            receiver_fingerprints = [receiver_fingerprints]
+        for fpr in receiver_fingerprints:
+            enc_message = self._gpg.encrypt_and_sign(message, fpr)
+            receiver_email = self._gpg.email_from_fingerprint(fpr)
+            self._send_email(enc_message, receiver_email)
 
     def report_row(self, *args):
         if len(args) == 1:

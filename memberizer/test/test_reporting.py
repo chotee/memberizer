@@ -24,6 +24,12 @@ class TestChangeReport(object):
         cr = ChangeReport(keyring=fixture_file('test_keyring'))
         cr.publish("80449D3E6EACE4D9C4D2A5D76752C3BC94DA7C30")
 
+    def test_pubish_multiple(self, monkeypatch):
+        monkeypatch.setattr(smtplib, "SMTP", Mock_smtplib_SMTP)
+        cr = ChangeReport(keyring=fixture_file('test_keyring'))
+        cr.publish(["80449D3E6EACE4D9C4D2A5D76752C3BC94DA7C30",
+                    "80449D3E6EACE4D9C4D2A5D76752C3BC94DA7C30"])
+
     def test_report_row(self):
         cr = ChangeReport()
         assert "foo" == cr.report_row("foo")

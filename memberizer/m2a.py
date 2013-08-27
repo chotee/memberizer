@@ -69,7 +69,7 @@ class Members2Accounts():
         accounts_not_current_members = self.add_or_update_accounts(accounts, members)
         self.make_accounts_non_members(accounts, accounts_not_current_members)
 
-    def go(self, accounts, reporting, member_file):
+    def go(self, accounts, reporting, config, member_file):
         try:
             members = Members(unicode(member_file))
             self.memberize(accounts, members)
@@ -79,7 +79,12 @@ class Members2Accounts():
         except RuntimeError:
             for tb in traceback.format_exception_only(sys.exc_type, sys.exc_value):
                 log.fatal(tb)
+                reporting.add_event("go", "RuntimeError", [tb])
             log.fatal("Got fatal exception. Aborting processing")
+            receivers = config.report.emerg_notifiers[::]
+            if members.signer_fingerprint is not None:
+                receivers.append(members.signer_fingerprint)
+            reporting.publish(receivers)
 
 def main():
     """I run the main program routine."""
@@ -97,9 +102,9 @@ def main():
                 log.debug("False alarm. Keeping watching")
                 continue
             log.info("Detected file '%s'.", members_file)
-            m2a.go(accounts, reporting, members_file)
+            m2a.go(accounts, reporting, config, members_file)
     else:
-        m2a.go(accounts, reporting, config.members_file)
+        m2a.go(accounts, reporting, config, config.members_file)
     log.info("End.")
 
 if __name__ == "__main__":

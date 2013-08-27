@@ -18,7 +18,8 @@ Defaults = {
         'smtp_host': 'localhost',
         'smtp_port': 25,
         'smtp_user': '',
-        'smtp_pass': ''
+        'smtp_pass': '',
+        'emerg_notifiers': [] # List of fingerprintss of people to the send errors to when memberizer has problems.
     },
     'gpg': { # GPG elements.
         'gpg_binary': 'gpg',
