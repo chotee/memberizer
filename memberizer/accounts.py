@@ -179,7 +179,7 @@ class Account(object, ):
             ('cn', group_name),
             ('gidNumber', str(gid)),
         ]
-        group_record= [(item[0], ldap.filter.escape_filter_chars(item[1])) for item in group_record]
+        group_record= [(item[0], [ldap.filter.escape_filter_chars(item[1])]) for item in group_record]
         group_record.append(('objectClass', ['posixGroup', 'top']))
         log.info("Adding group %s", group_dn)
         log.debug("with attributes: %s", group_record)

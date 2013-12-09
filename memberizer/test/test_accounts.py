@@ -13,7 +13,23 @@ from memberizer.exc import *
 
 @pytest.fixture
 def fake_accounts(monkeypatch):
-    mock_ldap_conn = MockLDAP()
+
+    initial_directory = {
+        'cn=NextFreeUnixId,dc=techinc,dc=nl': {
+            'objectClass': ['inetOrgPerson', 'sambaUnixIdPool'],
+            'gidNumber': ['777'],
+            'uidNumber': ['666'],
+            'cn': ['NextFreeUnixId'],
+            'sn': ['NextFreeUnixId']
+        },
+        'cn=everybody,ou=groups,dc=techinc,dc=nl': {
+            'cn': ['everybody']
+        },
+        'cn=members,ou=groups,dc=techinc,dc=nl': {
+            'cn': ['members']
+        }
+    }
+    mock_ldap_conn = MockLDAP(directory=initial_directory)
 
     people = {
         'existing':
