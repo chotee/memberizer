@@ -77,6 +77,7 @@ class Account(object, ):
         self._email = None
         self._nickname = None
         self._paid_until = None
+        self._samba_sid = None
         self._ldap_dn = None
         self._groups = None
         self._dirty = set()
@@ -98,6 +99,8 @@ class Account(object, ):
         self.nickname = attributes['cn'][0]
         if 'telexNumber' in attributes:
             self.paid_until = datetime.datetime.strptime(attributes['telexNumber'][0], "%Y-%m-%d").date()
+        if 'sambaSID' in attributes:
+            self.sambaSID = attributes['sambaSID']
         self._dirty.clear()
 
     def load_from_ldap_by_nickname(self, nickname=None):
@@ -163,9 +166,14 @@ class Account(object, ):
             ('uidNumber', str(uid)),
             ('gidNumber', str(gid)),
         ]
+        objectClasses = ['person', 'organizationalPerson', 'inetOrgPerson', 'posixAccount', 'shadowAccount', 'top']
+        if self._c.samba.enabled:
+            member_record.extend(self._samba_structure(uid))
+            objectClasses.append('sambaSamAccount')
         member_record.extend(self._ldap_account_structure())
         member_record = [(item[0], ldap.filter.escape_filter_chars(item[1]).encode('utf-8')) for item in member_record]
-        member_record.append(('objectClass', ['inetOrgPerson', 'posixAccount', 'top']))
+        member_record.append(('objectClass', objectClasses))
+
         log.info("Adding account %s", self._ldap_dn)
         log.debug("with attributes: %s", member_record)
         self._conn.add_s(self._ldap_dn, member_record)
@@ -196,7 +204,8 @@ class Account(object, ):
     def update(self):
         """I Assume a account has been previously created. For easy synchronisation use the save method."""
         assert self._ldap_dn is not None
-        mods = [(ldap.MOD_REPLACE, e[0], ldap.filter.escape_filter_chars(e[1])) for e in self._ldap_account_structure() ]
+        mods = [ (ldap.MOD_REPLACE, e[0], ldap.filter.escape_filter_chars(e[1]))
+                 for e in self._ldap_account_structure() ]
         log.info("Update account '%s', dirty attributes: %s", self.nickname, self._dirty)
         log.debug("Change: %s -> %s", self._ldap_dn, mods)
         self._conn.modify_s(self._ldap_dn, mods)
@@ -212,6 +221,18 @@ class Account(object, ):
                 ('telexNumber', str(self.paid_until)) # Abuse, I know.
                             # If you write a proper schema I'll get you a beer.
             )
+        return a
+
+    def _samba_structure(self, uid):
+        """I add entries that are needed for SAMBA intergration with LDAP."""
+        primary_sid = self._c.samba.primary_sid
+        base_sid = primary_sid[:primary_sid.rfind('-')] # the primary_sid without the last element
+        user_sid = base_sid + "-" + uid
+        a = [
+            ('sambaSID', user_sid),
+            ('sambaPrimaryGroupSID', primary_sid),
+            ('sambaAcctFlags', '[U          ]'),
+        ]
         return a
 
     def _group_dn(self, group_name):
@@ -277,6 +298,15 @@ class Account(object, ):
         if self._paid_until != value:
             self._paid_until = value
             self._dirty.add("paid_until")
+
+    @property
+    def sambaSID(self):
+        return self._samba_sid
+    @sambaSID.setter
+    def sambaSID(self, value):
+        if self._samba_sid != value:
+            self._samba_sid = value
+            self._dirty.add('sambaSID')
 
     @property
     def in_ldap(self):

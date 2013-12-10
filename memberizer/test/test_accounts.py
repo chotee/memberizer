@@ -231,7 +231,6 @@ class TestAccount(object):
         a.load_from_ldap_account_info(account_info)
         assert None == a.paid_until
 
-
 class TestAccounts(object):
     def test_verify_connection(self, fake_accounts):
         a = fake_accounts
