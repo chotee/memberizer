@@ -1,5 +1,6 @@
 import sys
 from copy import deepcopy
+from collections import OrderedDict
 import json
 import argparse
 from ast import literal_eval
@@ -8,48 +9,48 @@ import py
 import logging
 log = logging.getLogger('m2a.'+__name__)
 
-Defaults = {
-    'run': {
-        'dir_watch': None,
-    },
-    'report': {
-        'send': True,
-        'sender': 'memberizer@example.com',
-        'smtp_host': 'localhost',
-        'smtp_port': 25,
-        'smtp_user': '',
-        'smtp_pass': '',
-        'emerg_notifiers': [] # List of fingerprintss of people to the send errors to when memberizer has problems.
-    },
-    'gpg': { # GPG elements.
-        'gpg_binary': 'gpg',
-        'keyring': None,  # directory with the GPG keyring. None will give the default location for the user.
-        'my_id': 'FINGERPRINT OF UPDATE PROCESS',  # Fingerprint of the key that the automation uses to decrypt and sign
-        'signer_ids': [
+Defaults = OrderedDict([
+    ('run', OrderedDict([
+        ('dir_watch', None)
+    ])),
+    ('report', OrderedDict([
+        ('send', True),
+        ('sender', 'memberizer@example.com'),
+        ('smtp_host', 'localhost'),
+        ('smtp_port', 25),
+        ('smtp_user', ''),
+        ('smtp_pass', ''),
+        ('emerg_notifiers', [])  # List of fingerprints of people to the send errors to when memberizer has problems.
+    ])),
+    ('gpg', OrderedDict([  # GPG elements.
+        ('gpg_binary', 'gpg'),
+        ('keyring', None),  # directory with the GPG keyring. None will give the default location for the user.
+        ('my_id', 'FINGERPRINT OF UPDATE PROCESS'),  # Fingerprint of the key that the automation uses to decrypt+sign
+        ('signer_ids', [
             'FINGERPRINTS THAT SIGN UPDATES',
-        ],  # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
-    },
-    'ldap': {
+        ]),  # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
+    ])),
+    ('ldap', OrderedDict([
         # LDAP server access..
-        'uri': '',#'ldap://192.168.122.224', # URL for the LDAP server.
-        'user': '',#'cn=root,dc=techinc,dc=nl', # User to use with the LDAP server to make the changes.
-        'passwd': '',#'test', # Password of the ldap user
+        ('uri', ''),  # 'ldap://192.168.122.224', # URL for the LDAP server.
+        ('user', ''),  # 'cn=root,dc=techinc,dc=nl', # User to use with the LDAP server to make the changes.
+        ('passwd', ''),  # 'test', # Password of the ldap user
         # LDAP Structure.
-        'base_dn': 'dc=techinc,dc=nl',  # base DN for the LDAP tree.
-        'people_dn': 'ou=people,dc=techinc,dc=nl',  # Where are people stored?
-        'groups_dn': 'ou=groups,dc=techinc,dc=nl',  # Where are the groups stored.
-        'free_id_dn': 'cn=NextFreeUnixId,dc=techinc,dc=nl',  # Where is the record that keeps track of given userids.
-        'member_group': 'members',  # The name of the group that contain the members.
-        'default_group': 'everybody',  # The name of a group that contains everybody (new members are added to this,
-                                       # but non-members are not removed. Use None for none.
-        'home_base': '/home/',  # base for the home directory. Will append the nickname to this.
-    },
-    'samba': {
-        'enabled': True,  # set to False for disabling Samba.
-        'primary_sid': 'PRIMARY GROUP SAMBA SID', # The SID of the primary group. This will also be the basis
-            # for the User SID (remove last part, add the user's UID)
-    }
-}
+        ('base_dn', 'dc=techinc,dc=nl'),  # base DN for the LDAP tree.
+        ('people_dn', 'ou=people,dc=techinc,dc=nl'),  # Where are people stored?
+        ('groups_dn', 'ou=groups,dc=techinc,dc=nl'),  # Where are the groups stored.
+        ('free_id_dn', 'cn=NextFreeUnixId,dc=techinc,dc=nl'),  # Where is the record that keeps track of given userids.
+        ('member_group', 'members'),  # The name of the group that contain the members.
+        ('default_group', 'everybody'),  # The name of a group that contains everybody (new members are added to this,
+                                         # but non-members are not removed. Use None for none.
+        ('home_base', '/home/'),  # base for the home directory. Will append the nickname to this.
+    ])),
+    ('samba', OrderedDict([
+        ('enabled', True),  # set to False for disabling Samba.
+        ('primary_sid', 'PRIMARY GROUP SAMBA SID'),  # The SID of the primary group. This will also be the basis
+                                                     # for the User SID (remove last part, add the user's UID)
+    ]))
+])
 
 _CONFIG_INST = None
 def Config(**kwargs):
@@ -102,8 +103,7 @@ def _config_write_file(data, res):
     else:
         with fref.open('wb') as fd:
             log.info("Writing configuration to %s", res.write_config)
-            json.dump(data, fd,
-                      sort_keys=True, indent=4, separators=(',', ': '))
+            json.dump(data, fd, indent=4, separators=(',', ': '))
         log.debug("Done.")
     sys.exit()
 
