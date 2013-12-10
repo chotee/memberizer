@@ -16,7 +16,7 @@ setup(
         # If any package contains *.txt or *.rst files, include them:
         '': ['*.txt', '*.rst'],
     },
-    install_requires=['py', 'python-gnupg', 'python-ldap'],
+    install_requires=['py', 'python-gnupg', 'python-ldap', 'passlib'],
     tests_require=['pytest', 'fakeldap'],
     entry_points = {
         'console_scripts': [

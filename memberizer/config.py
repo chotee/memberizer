@@ -23,11 +23,11 @@ Defaults = {
     },
     'gpg': { # GPG elements.
         'gpg_binary': 'gpg',
-        'keyring': None, # directory with the GPG keyring. None will give the default location for the user.
-        'my_id': 'FINGERPRINT OF UPDATE PROCESS', # Fingerprint of the key that the automation uses to decrypt and sign
-        'signer_ids' : [
+        'keyring': None,  # directory with the GPG keyring. None will give the default location for the user.
+        'my_id': 'FINGERPRINT OF UPDATE PROCESS',  # Fingerprint of the key that the automation uses to decrypt and sign
+        'signer_ids': [
             'FINGERPRINTS THAT SIGN UPDATES',
-        ], # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
+        ],  # IDs of Keys that we see as valid signers of member lists. Keys must be imported and trusted!
     },
     'ldap': {
         # LDAP server access..
@@ -35,15 +35,20 @@ Defaults = {
         'user': '',#'cn=root,dc=techinc,dc=nl', # User to use with the LDAP server to make the changes.
         'passwd': '',#'test', # Password of the ldap user
         # LDAP Structure.
-        'base_dn': 'dc=techinc,dc=nl', # base DN for the LDAP tree.
-        'people_dn': 'ou=people,dc=techinc,dc=nl', # Where are people stored?
-        'groups_dn': 'ou=groups,dc=techinc,dc=nl', # Where are the groups stored.
-        'free_id_dn': 'cn=NextFreeUnixId,dc=techinc,dc=nl', # Where is the record that keeps track of given userids.
-        'member_group': 'members', # The name of the group that contain the members.
-        'default_group': 'everybody', # The name of a group that contains everybody (new members are added to this,
-                                      # but non-members are not removed. Use None for none.
-        'home_base': '/home/', # base for the home directory. Will append the nickname to this.
-       },
+        'base_dn': 'dc=techinc,dc=nl',  # base DN for the LDAP tree.
+        'people_dn': 'ou=people,dc=techinc,dc=nl',  # Where are people stored?
+        'groups_dn': 'ou=groups,dc=techinc,dc=nl',  # Where are the groups stored.
+        'free_id_dn': 'cn=NextFreeUnixId,dc=techinc,dc=nl',  # Where is the record that keeps track of given userids.
+        'member_group': 'members',  # The name of the group that contain the members.
+        'default_group': 'everybody',  # The name of a group that contains everybody (new members are added to this,
+                                       # but non-members are not removed. Use None for none.
+        'home_base': '/home/',  # base for the home directory. Will append the nickname to this.
+    },
+    'samba': {
+        'enabled': True,  # set to False for disabling Samba.
+        'primary_sid': 'PRIMARY GROUP SAMBA SID', # The SID of the primary group. This will also be the basis
+            # for the User SID (remove last part, add the user's UID)
+    }
 }
 
 _CONFIG_INST = None
@@ -177,6 +182,8 @@ def Config_sanity(config):
         fatal("LDAP credentials '%s' not in the URI format. Must be scheme:location", config.ldap.uri)
     if not config.ldap.user or not config.ldap.passwd:
         fatal("Missing LDAP credentials.. Set --ldap.user and --ldap.passwd")
+    if config.samba.enabled and config.samba.primary_sid.count('-') != 7:
+        fatal("With samba enabled, the primary_sid must be of form: 'S-N-N-N-N-N-N-N' (N = number). Currently it is '%s'", config.samba.primary_sid)
 
 
 class _Config(object):

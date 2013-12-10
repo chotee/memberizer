@@ -101,6 +101,7 @@ class Account(object, ):
         self._dirty.clear()
 
     def load_from_ldap_by_nickname(self, nickname=None):
+        """Given a nickname, I load the member from the LDAP database."""
         nickname = self.nickname if nickname is None else nickname
         nickname_filter = filter_format('(&(objectClass=inetOrgPerson)(cn=%s))', [nickname])
         res = self._ldap_search_one(self._c.ldap.people_dn, ldap.SCOPE_ONELEVEL, nickname_filter)
