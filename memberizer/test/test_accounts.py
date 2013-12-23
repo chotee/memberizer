@@ -22,6 +22,10 @@ def fake_accounts(monkeypatch):
             'cn': ['NextFreeUnixId'],
             'sn': ['NextFreeUnixId']
         },
+        'sambaDomainName=TECHINC,dc=techinc,dc=nl': {
+            'sambaSID': ['S-1-5-21-666-666-666'],
+            'sambaNextRid': ['10000'],
+        },
         'cn=everybody,ou=groups,dc=techinc,dc=nl': {
             'cn': ['everybody']
         },
@@ -230,6 +234,11 @@ class TestAccount(object):
         )
         a.load_from_ldap_account_info(account_info)
         assert None == a.paid_until
+
+    def test_get_samba_sid(self, fake_accounts):
+        accounts = fake_accounts
+        a = accounts.new_account()
+        assert 'S-1-5-21-666-666-666' == a._get_samba_sid()
 
 class TestAccounts(object):
     def test_verify_connection(self, fake_accounts):

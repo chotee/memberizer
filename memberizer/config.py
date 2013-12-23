@@ -46,9 +46,11 @@ Defaults = OrderedDict([
         ('home_base', '/home/'),  # base for the home directory. Will append the nickname to this.
     ])),
     ('samba', OrderedDict([
-        ('enabled', True),  # set to False for disabling Samba.
-        ('primary_sid', 'PRIMARY GROUP SAMBA SID'),  # The SID of the primary group. This will also be the basis
-                                                     # for the User SID (remove last part, add the user's UID)
+        ('enabled', True),  # set to False for disabling Samba support.
+        ('dn', 'sambaDomainName=TECHINC,dc=techinc,dc=nl'),
+        ('primary_group', 'S-1-5-21-4915722557-891866647-4173338126-10000'),
+        ('free_id_attr', 'sambaNextRid'),
+        ('sid_attr', 'sambaSID'),
     ]))
 ])
 
@@ -182,8 +184,8 @@ def Config_sanity(config):
         fatal("LDAP credentials '%s' not in the URI format. Must be scheme:location", config.ldap.uri)
     if not config.ldap.user or not config.ldap.passwd:
         fatal("Missing LDAP credentials.. Set --ldap.user and --ldap.passwd")
-    if config.samba.enabled and config.samba.primary_sid.count('-') != 7:
-        fatal("With samba enabled, the primary_sid must be of form: 'S-N-N-N-N-N-N-N' (N = number). Currently it is '%s'", config.samba.primary_sid)
+    #if config.samba.enabled and config.samba.primary_sid.count('-') != 7:
+    #    fatal("With samba enabled, the primary_sid must be of form: 'S-N-N-N-N-N-N-N' (N = number). Currently it is '%s'", config.samba.primary_sid)
 
 
 class _Config(object):

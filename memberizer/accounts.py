@@ -12,7 +12,8 @@ from exc import AccountDoesNotExistException, MultipleResultsException, Operatio
 
 class Accounts(object):
     def __init__(self, ldap_conn=None):
-        self._c = Config().ldap
+        config = Config()
+        self._c = config.ldap
         self._report = None
         if ldap_conn is not None:
             self.connect(ldap_conn)
@@ -168,7 +169,8 @@ class Account(object, ):
         ]
         objectClasses = ['person', 'organizationalPerson', 'inetOrgPerson', 'posixAccount', 'shadowAccount', 'top']
         if self._c.samba.enabled:
-            member_record.extend(self._samba_structure(uid))
+            sid = self._grab_unique_samba_id()
+            member_record.extend(self._samba_structure(sid))
             objectClasses.append('sambaSamAccount')
         member_record.extend(self._ldap_account_structure())
         member_record = [(item[0], ldap.filter.escape_filter_chars(item[1]).encode('utf-8')) for item in member_record]
@@ -204,15 +206,15 @@ class Account(object, ):
     def update(self):
         """I Assume a account has been previously created. For easy synchronisation use the save method."""
         assert self._ldap_dn is not None
-        mods = [ (ldap.MOD_REPLACE, e[0], ldap.filter.escape_filter_chars(e[1]))
-                 for e in self._ldap_account_structure() ]
+        mods = [(ldap.MOD_REPLACE, e[0], ldap.filter.escape_filter_chars(e[1]))
+                for e in self._ldap_account_structure()]
         log.info("Update account '%s', dirty attributes: %s", self.nickname, self._dirty)
         log.debug("Change: %s -> %s", self._ldap_dn, mods)
         self._conn.modify_s(self._ldap_dn, mods)
         log.debug("Changed.")
 
     def _ldap_account_structure(self):
-        '''I represent the parts of the LDAP structure that can be changed after '''
+        """I represent the parts of the LDAP structure that can be changed after creation"""
         a = [
             ('mail', self.email.encode()),
         ]
@@ -223,14 +225,16 @@ class Account(object, ):
             )
         return a
 
-    def _samba_structure(self, uid):
-        """I add entries that are needed for SAMBA intergration with LDAP."""
-        primary_sid = self._c.samba.primary_sid
-        base_sid = primary_sid[:primary_sid.rfind('-')] # the primary_sid without the last element
-        user_sid = base_sid + "-" + uid
+    def _get_samba_sid(self):
+        return self._conn.search_s(self._c.samba.dn, ldap.SCOPE_BASE)[0][1][self._c.samba.sid_attr][0]
+
+    def _samba_structure(self, sid):
+        """I add entries that are needed for SAMBA integration with LDAP."""
+        base_sid = self._get_samba_sid()
+        user_sid = base_sid + "-" + str(sid)
         a = [
             ('sambaSID', user_sid),
-            ('sambaPrimaryGroupSID', primary_sid),
+            ('sambaPrimaryGroupSID', self._c.samba.primary_group),
             ('sambaAcctFlags', '[U          ]'),
         ]
         return a
@@ -336,6 +340,15 @@ class Account(object, ):
         ]
         self._conn.modify_s(self._c.ldap.free_id_dn, update_res)
         return uid, gid
+
+    def _grab_unique_samba_id(self):
+        sid = self._conn.search_s(self._c.samba.dn, ldap.SCOPE_BASE)[0][1][self._c.samba.free_id_attr][0]
+        new_sid = str(int(sid)+1)
+        update_sid = [
+                (ldap.MOD_REPLACE, self._c.samba.free_id_attr, new_sid),
+        ]
+        self._conn.modify_s(self._c.samba.dn, update_sid)
+        return sid
 
     def _account_dn(self, nickname):
         return filter_format('cn=%s,%s', [nickname, self._c.ldap.people_dn])
