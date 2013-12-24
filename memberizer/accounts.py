@@ -117,7 +117,8 @@ class Account(object, ):
         self.email = member.email
         if self.nickname == '':
             if self._report is not None:
-                self._report.add_event("", "load_account_from_member", ["Member has no nickname. Email: '%s'",  member.email])
+                self._report.add_event("", "load_account_from_member", ["Member has no nickname. Email: '%s'",
+                                                                        member.email])
             raise MemberNotValidException("Member does not have a nickname! '%s'", member)
         try:
             self.paid_until = member.paid_until
@@ -254,6 +255,7 @@ class Account(object, ):
         group_dn = self._group_dn(group_name)
         change = (
             (ldap.MOD_ADD, 'memberUid', (self.nickname.encode(),)),
+            (ldap.MOD_ADD, 'member', (self._ldap_dn,)),
         )
         log.info("Adding %s to group %s", self.nickname, group_dn)
         log.debug("Change: %s", change)

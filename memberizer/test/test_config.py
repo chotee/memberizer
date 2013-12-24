@@ -3,7 +3,7 @@ __author__ = 'chotee'
 import pytest
 import py
 
-from config import Config, Config_reset, Config_sanity
+from memberizer.config import Config, Config_reset, Config_sanity
 
 @pytest.fixture
 def clean_config():

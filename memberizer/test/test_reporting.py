@@ -2,7 +2,7 @@ __author__ = 'Chotee'
 
 import py
 
-from reporting import ChangeReport
+from memberizer.reporting import ChangeReport
 from mocks import Mock_smtplib_SMTP
 import smtplib
 
