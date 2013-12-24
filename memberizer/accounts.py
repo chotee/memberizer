@@ -18,6 +18,7 @@ class Accounts(object):
         if ldap_conn is not None:
             self.connect(ldap_conn)
 
+
     def connect(self, ldap_conn=None):
         log.debug("Connecting")
         if ldap_conn:
@@ -94,7 +95,7 @@ class Account(object, ):
 
     def load_from_ldap_account_info(self, account_info):
         """I take the results of a ldap entry and load the account object with the data."""
-        self._ldap_dn = account_info[0]
+        self._ldap_dn = str(account_info[0])
         attributes = account_info[1]
         self.email = attributes['mail'][0]
         self.nickname = attributes['cn'][0]
@@ -150,7 +151,7 @@ class Account(object, ):
 
     @record_event
     def create(self):
-        self._ldap_dn = self._account_dn(self.nickname)
+        self._ldap_dn = str(self._account_dn(self.nickname))
         uid, gid = self._grab_unique_ids()
         self._create_account(gid, uid)
         self._create_group(gid)

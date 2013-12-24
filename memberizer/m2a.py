@@ -62,9 +62,9 @@ class Members2Accounts():
         :param members: List of all the current members.
         """
         accounts.connect()
-        accounts.verify_connection() # Pre-flight test of member database
+        accounts.verify_connection()  # Pre-flight test of member database
         members.check_sanity()
-        members.decrypt_and_verify() # Check that the member change document is trustable.
+        members.decrypt_and_verify()  # Check that the member change document is trustable.
 
         accounts_not_current_members = self.add_or_update_accounts(accounts, members)
         self.make_accounts_non_members(accounts, accounts_not_current_members)
@@ -96,7 +96,7 @@ def main():
     accounts = Accounts()
     accounts.set_reporting(reporting)
     if config.run.dir_watch:
-        while 42:
+        while True:
             members_file = directory_watcher(config.run.dir_watch) # This blocks until a file is changed.
             if not members_file:
                 log.debug("False alarm. Keeping watching")
