@@ -191,6 +191,7 @@ class Account(object, ):
         group_record = [
             ('cn', group_name),
             ('gidNumber', str(gid)),
+            ('member', self._ldap_dn),
         ]
         group_record= [(item[0], [ldap.filter.escape_filter_chars(item[1])]) for item in group_record]
         group_record.append(('objectClass', ['groupOfNames', 'posixGroup', 'top']))
