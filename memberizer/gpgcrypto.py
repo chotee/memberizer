@@ -7,8 +7,8 @@ log = logging.getLogger('m2a.' + __name__)
 import gnupg
 import py
 
-from memberizer.config import Config
-from memberizer.exc import *
+from config import Config
+from exc import *
 
 class GpgCrypto(object):
     def __init__(self, keyring=None):
@@ -26,7 +26,7 @@ class GpgCrypto(object):
 
     def check_sanity(self, keyring=None):
         gpg_my_id = self._c.gpg.my_id
-        for key in self._gpg.list_keys(secret=True): # iter over the secret keys available in the ring
+        for key in self._gpg.list_keys(secret=True):  # iter over the secret keys available in the ring
             if key['fingerprint'] == gpg_my_id:
                 return
         raise SecretKeyNotInKeyringException("In keyring '%s' No key found with fingerprint '%s'" % (self._gpg.gnupghome,
