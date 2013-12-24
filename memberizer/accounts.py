@@ -193,7 +193,7 @@ class Account(object, ):
             ('gidNumber', str(gid)),
         ]
         group_record= [(item[0], [ldap.filter.escape_filter_chars(item[1])]) for item in group_record]
-        group_record.append(('objectClass', ['posixGroup', 'top']))
+        group_record.append(('objectClass', ['groupOfNames', 'posixGroup', 'top']))
         log.info("Adding group %s", group_dn)
         log.debug("with attributes: %s", group_record)
         try:
@@ -201,8 +201,7 @@ class Account(object, ):
             log.debug("Added.")
         except ldap.ALREADY_EXISTS:
             log.warn("The group %s already exists!", group_dn)
-        finally:
-            self.add_to_group(group_name)
+        self.add_to_group(group_name)
 
     @record_event
     def update(self):
@@ -271,6 +270,7 @@ class Account(object, ):
         group_dn = self._group_dn(group_name)
         change = (
             (ldap.MOD_DELETE, 'memberUid', (self.nickname.encode(),)),
+            (ldap.MOD_DELETE, 'member', (self._ldap_dn,)),
         )
         log.info("Removing %s from group %s", self.nickname, group_dn)
         log.debug("Change: %s", change)
