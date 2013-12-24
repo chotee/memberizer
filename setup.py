@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='memberizer',
-    version='4',
+    version='5',
     description='Take a member file and create LDAP accounts',
     long_description="Load in a JSON file with members and create LDAP accounts with the member groups.",
     url='https://www.github.com/chotee/memberizer',
